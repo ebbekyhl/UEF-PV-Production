@@ -51,9 +51,6 @@ def read_tmp(year_month, download_dir):
 
 def download_pv_data(year_month,download_dir):
 
-    # create download directory if it does not exist
-    os.makedirs(download_dir, exist_ok=True)
-
     # delete .tmp files if they exist
     initial_cleaning(download_dir)
 
