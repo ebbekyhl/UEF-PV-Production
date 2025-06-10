@@ -78,8 +78,6 @@ def download_pv_data(year_month,download_dir):
     options.add_argument("--no-sandbox")
     # options.add_argument("--disable-dev-shm-usage") # Recommended by ChatGPT
 
-driver = webdriver.Chrome(options=options)
-
     # Set up driver
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 

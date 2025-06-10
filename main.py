@@ -14,7 +14,7 @@ options.add_argument("--disable-dev-shm-usage")
 
 driver = webdriver.Chrome(options=options)
 
-download_dir = os.path.relpath("data")  # choose where to save data
+download_dir = download_dir = os.path.abspath("data")  # choose where to save data
 
 month_mapping = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May",
                     6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct",
