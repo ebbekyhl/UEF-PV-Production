@@ -9,6 +9,7 @@ import os
 import json
 import pandas as pd
 import time
+import glob
 
 def initial_cleaning(download_dir):
     # if .tmp files exist in the download directory, delete them
@@ -18,36 +19,33 @@ def initial_cleaning(download_dir):
         print(f"Deleted temporary file: {tmp_file}")
 
 def read_tmp(year_month, download_dir):
-    # find files ending with .tmp in the download directory
-    tmp_file = [f for f in os.listdir(download_dir) if f.endswith('.tmp')][0]
+    # Look for all candidate files
+    files = glob.glob(os.path.join(download_dir, "*.tmp")) + glob.glob(os.path.join(download_dir, "*.json"))
 
-    filepath = os.path.join(download_dir, tmp_file)
+    if not files:
+        raise FileNotFoundError("No downloaded data file (.tmp or .json) found in download directory.")
 
-    # Wait until the file is fully downloaded and renamed (you can customize the logic)
-    time.sleep(5)  # wait for download completion
+    filepath = files[0]  # Assume first is the one we want
 
-    # Read the .tmp file content
+    # Wait briefly to ensure it's fully written (you can increase if needed)
+    time.sleep(3)
+
+    # Read the file
     with open(filepath, "r") as f:
         data_str = f.read()
 
-    # If it's JSON, parse it
     try:
         data_dict = json.loads(data_str)
     except json.JSONDecodeError:
-        # If it's a Python dict-like string, you can safely use ast.literal_eval
         import ast
         data_dict = ast.literal_eval(data_str)
 
-    # Convert to pandas DataFrame
+    # Convert to DataFrame and save
     df = pd.DataFrame(data_dict["data"])
-
-    # Save to .csv
     csv_file_path = f"{download_dir}/PV_production_Aarhus_{year_month}.csv"
-    print(csv_file_path)
-    df[["date","Ep"]].to_csv(csv_file_path, index=False, header=True, sep=";")
-    
-    # delete .tmp file
-    os.remove(download_dir + "/" +  tmp_file)
+    df[["date", "Ep"]].to_csv(csv_file_path, index=False, header=True, sep=";")
+
+    os.remove(filepath)
 
 def download_pv_data(year_month,download_dir):
 
