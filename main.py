@@ -45,8 +45,12 @@ try:
         "font.family": "serif",
         "text.latex.preamble": r"\usepackage{amsmath}"
     })
-except Exception as e:
-    print("LaTeX not available, using default fonts:", e)
+except Exception:
+        plt.rcParams.update({
+        "text.usetex": False,
+        "font.family": "DejaVu Serif"
+        }
+    print("LaTeX not available, using default fonts: DejaVu Serif")
 
 plt.rcParams['axes.labelsize'] = fs
 plt.rcParams['axes.titlesize'] = fs + 2
