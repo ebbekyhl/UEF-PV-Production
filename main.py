@@ -4,23 +4,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-options = Options()
-# options.headless = True
-options.add_argument("--headless=new") 
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-
-driver = webdriver.Chrome(options=options)
-
 download_dir = download_dir = os.path.abspath("data")  # choose where to save data
 
 month_mapping = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May",
                     6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct",
                     11: "Nov", 12: "Dec"}
-
 
 # Get the date of today
 today = pd.Timestamp.now()
@@ -28,7 +16,8 @@ today = pd.Timestamp.now()
 print("Today is the " + str(today.day) + " of " + month_mapping[today.month])
 print("Last month was " + month_mapping[today.month - 1])
 months = np.arange(1, today.month)
-year_months = [f"2025-{month:02d}" for month in months]
+year = today.year
+year_months = [f"{year}-{month:02d}" for month in months]
 
 for year_month in year_months:
     download.download_pv_data(year_month,download_dir)
@@ -50,11 +39,14 @@ pvgis = {"Jan": 895.7,
 # plotting configuration
 fs = 14
 
-plt.rcParams.update({
-    "text.usetex": True,   # Use LaTeX for text rendering
-    "font.family": "serif",  # Use a serif font (you can choose other options)
-    "text.latex.preamble": r"\usepackage{amsmath}"  # Optional, for math symbols
-})
+try:
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "serif",
+        "text.latex.preamble": r"\usepackage{amsmath}"
+    })
+except Exception as e:
+    print("LaTeX not available, using default fonts:", e)
 
 plt.rcParams['axes.labelsize'] = fs
 plt.rcParams['axes.titlesize'] = fs + 2
