@@ -25,23 +25,27 @@ def read_tmp(year_month, download_dir):
     waited = 0
     sleep_interval = 1  # seconds
 
-    while not files and waited < timeout:
-        time.sleep(sleep_interval)
-        waited += sleep_interval
+    while waited < timeout:
+        
         files = glob.glob(os.path.join(download_dir, "*.tmp")) + \
                 glob.glob(os.path.join(download_dir, "*.json")) + \
                 glob.glob(os.path.join(download_dir, "*.json.crdownload"))
+        
+        if len(files) > 0:
+            print("Identified temporary files: ",files)
+            break
+        
+        time.sleep(sleep_interval)
+        waited += sleep_interval
 
-    if not files:
+    if len(files) == 0:  # If no files were found after the timeout:
         raise TimeoutError(f"No downloaded file appeared in {timeout} seconds.")
     else:
         filepath = files[0]
 
     print("Waited ", waited, ' seconds')
 
-    print("Files in download dir:", os.listdir(download_dir))
-
-    print("Identified temporary files: ",files)
+    print("Files now in download dir:", os.listdir(download_dir))
 
     # Wait briefly to ensure it's fully written (you can increase if needed)
     time.sleep(5)
