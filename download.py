@@ -20,7 +20,9 @@ def initial_cleaning(download_dir):
 
 def read_tmp(year_month, download_dir):
     # Look for all candidate files
-    files = glob.glob(os.path.join(download_dir, "*.tmp")) + glob.glob(os.path.join(download_dir, "*.json"))
+    files = glob.glob(os.path.join(download_dir, "*.tmp")) + glob.glob(os.path.join(download_dir, "*.json")) + + glob.glob(os.path.join(download_dir, "*.json.crdownload"))
+
+    print("identified .tmp files: ",files)
 
     if not files:
         raise FileNotFoundError("No downloaded data file (.tmp or .json) found in download directory.")
