@@ -28,7 +28,7 @@ def read_tmp(year_month, download_dir):
     filepath = files[0]  # Assume first is the one we want
 
     # Wait briefly to ensure it's fully written (you can increase if needed)
-    time.sleep(3)
+    time.sleep(10)
 
     # Read the file
     with open(filepath, "r") as f:
