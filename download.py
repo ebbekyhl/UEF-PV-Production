@@ -19,18 +19,32 @@ def initial_cleaning(download_dir):
         print(f"Deleted temporary file: {tmp_file}")
 
 def read_tmp(year_month, download_dir):
-    # Look for all candidate files
-    files = glob.glob(os.path.join(download_dir, "*.tmp")) + glob.glob(os.path.join(download_dir, "*.json")) + glob.glob(os.path.join(download_dir, "*.json.crdownload"))
 
-    print("identified temporary files: ",files)
+    # Wait for up to 120 seconds for the file to appear
+    timeout = 120  # seconds
+    waited = 0
+    sleep_interval = 1  # seconds
+
+    while not files and waited < timeout:
+        time.sleep(sleep_interval)
+        waited += sleep_interval
+        files = glob.glob(os.path.join(download_dir, "*.tmp")) + \
+                glob.glob(os.path.join(download_dir, "*.json")) + \
+                glob.glob(os.path.join(download_dir, "*.json.crdownload"))
 
     if not files:
-        raise FileNotFoundError("No downloaded data file (.tmp, .json, or .json.crdownload) found in download directory.")
+        raise TimeoutError(f"No downloaded file appeared in {timeout} seconds.")
+    else:
+        filepath = files[0]
 
-    filepath = files[0]  # Assume first is the one we want
+    print("Waited ", waited, ' seconds')
+
+    print("Files in download dir:", os.listdir(download_dir))
+
+    print("Identified temporary files: ",files)
 
     # Wait briefly to ensure it's fully written (you can increase if needed)
-    time.sleep(10)
+    time.sleep(5)
 
     # Read the file
     with open(filepath, "r") as f:
@@ -101,11 +115,6 @@ def download_pv_data(year_month,download_dir):
 
     finally:
         driver.quit()
-
-    # Wait for the download to complete
-    time.sleep(30)
-
-    print("Files in download dir:", os.listdir(download_dir))
 
     read_tmp(year_month, download_dir)
     
