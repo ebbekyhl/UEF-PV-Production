@@ -20,7 +20,7 @@ def initial_cleaning(download_dir):
 
 def read_tmp(year_month, download_dir):
     # Look for all candidate files
-    files = glob.glob(os.path.join(download_dir, "*.tmp")) + glob.glob(os.path.join(download_dir, "*.json")) + + glob.glob(os.path.join(download_dir, "*.json.crdownload"))
+    files = glob.glob(os.path.join(download_dir, "*.tmp")) + glob.glob(os.path.join(download_dir, "*.json")) + glob.glob(os.path.join(download_dir, "*.json.crdownload"))
 
     print("identified .tmp files: ",files)
 
