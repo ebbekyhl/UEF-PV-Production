@@ -71,7 +71,7 @@ df = pd.concat([pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv",
 df.rename(columns={"Ep":"Production"}, inplace=True)
 
 # convert "date" into pd.datetime
-df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d %H:%M:%S")
+df["date"] = pd.to_datetime(df["date"])
 
 # set "date" as index
 df.set_index("date", inplace=True, drop=True)
