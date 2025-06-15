@@ -22,10 +22,10 @@ def read_tmp(year_month, download_dir):
     # Look for all candidate files
     files = glob.glob(os.path.join(download_dir, "*.tmp")) + glob.glob(os.path.join(download_dir, "*.json")) + glob.glob(os.path.join(download_dir, "*.json.crdownload"))
 
-    print("identified .tmp files: ",files)
+    print("identified temporary files: ",files)
 
     if not files:
-        raise FileNotFoundError("No downloaded data file (.tmp or .json) found in download directory.")
+        raise FileNotFoundError("No downloaded data file (.tmp, .json, or .json.crdownload) found in download directory.")
 
     filepath = files[0]  # Assume first is the one we want
 
@@ -103,7 +103,7 @@ def download_pv_data(year_month,download_dir):
         driver.quit()
 
     # Wait for the download to complete
-    time.sleep(10)
+    time.sleep(30)
 
     print("Files in download dir:", os.listdir(download_dir))
 
