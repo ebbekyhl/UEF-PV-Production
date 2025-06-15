@@ -50,7 +50,7 @@ except Exception:
         "text.usetex": False,
         "font.family": "DejaVu Serif"
         })
-    print("LaTeX not available, using default fonts: DejaVu Serif")
+        print("LaTeX not available, using default fonts: DejaVu Serif")
 
 plt.rcParams['axes.labelsize'] = fs
 plt.rcParams['axes.titlesize'] = fs + 2
