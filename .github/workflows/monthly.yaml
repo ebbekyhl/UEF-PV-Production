@@ -5,6 +5,9 @@ on:
     - cron: '0 0 1 * *'  # First day of every month at midnight UTC
   workflow_dispatch:     # Allows manual run for testing
 
+permissions:
+  contents: write
+  
 jobs:
   run-monthly:
     runs-on: ubuntu-latest
