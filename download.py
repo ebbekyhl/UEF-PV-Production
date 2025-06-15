@@ -76,6 +76,13 @@ def download_pv_data(year_month,download_dir):
     # Set up driver
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
+    # Enable downloads in headless mode
+    params = {
+        "behavior": "allow",
+        "downloadPath": download_dir,
+    }
+    driver.execute_cdp_cmd("Page.setDownloadBehavior", params)
+
     try:
         driver.get(#"https://dashboard.aurora-h2020.eu/en-GB/pv-data?site=DK01&month={year_month}")
                 url)
@@ -92,6 +99,8 @@ def download_pv_data(year_month,download_dir):
 
     finally:
         driver.quit()
+
+    print("Files in download dir:", os.listdir(download_dir))
 
     read_tmp(year_month, download_dir)
     
