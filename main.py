@@ -106,7 +106,6 @@ ax.annotate("", xy=(1.0, y_text), xytext=(1.0 - subtract, y_text),
 text = production_monthly_sum.index[-1] + " " +  year_months[-1][0:4]
 
 ax.text(x_text, y_text - y_range*0.00001, text, ha='center', va='top', transform=ax.transAxes, fontsize=fs, color="k", alpha=0.75)
-plt.tight_layout()
 
 # savefig
 fig.savefig(download_dir + "/daily_production_" + year_month + ".png", bbox_inches='tight')
@@ -133,5 +132,4 @@ ax_m.set_xticklabels(ax_m.get_xticklabels(), rotation=0, ha='center')
 ax_m.legend()
 
 # savefig
-plt.tight_layout()
 fig_m.savefig(download_dir + "/monthly_production_" + year_month + ".png", bbox_inches='tight')
