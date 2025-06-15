@@ -102,6 +102,9 @@ def download_pv_data(year_month,download_dir):
     finally:
         driver.quit()
 
+    # Wait for the download to complete
+    time.sleep(10)
+
     print("Files in download dir:", os.listdir(download_dir))
 
     read_tmp(year_month, download_dir)
