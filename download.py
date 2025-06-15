@@ -14,6 +14,7 @@ import glob
 def initial_cleaning(download_dir):
     # if .tmp files exist in the download directory, delete them
     tmp_files = [f for f in os.listdir(download_dir) if f.endswith('.tmp')]
+
     for tmp_file in tmp_files:
         os.remove(os.path.join(download_dir, tmp_file))
         print(f"Deleted temporary file: {tmp_file}")
@@ -24,6 +25,8 @@ def read_tmp(year_month, download_dir):
     timeout = 200 # seconds
     waited = 0
     sleep_interval = 5 # seconds
+
+    print("Files in download dir:", os.listdir(download_dir))
 
     while waited < timeout:
         
@@ -88,7 +91,6 @@ def download_pv_data(year_month,download_dir):
     # options.headless = True # Recommended by ChatGPT
     options.add_experimental_option("prefs", prefs)
     options.add_argument("--headless=new")  # Required for headless downloads in Chrome 96+
-    options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     # options.add_argument("--disable-dev-shm-usage") # Recommended by ChatGPT
