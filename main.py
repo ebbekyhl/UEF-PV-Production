@@ -38,20 +38,6 @@ pvgis = {"Jan": 895.7,
 
 # plotting configuration
 fs = 14
-
-try:
-    plt.rcParams.update({
-        "text.usetex": True,
-        "font.family": "serif",
-        "text.latex.preamble": r"\usepackage{amsmath}"
-    })
-except Exception:
-        plt.rcParams.update({
-        "text.usetex": False,
-        "font.family": "DejaVu Serif"
-        })
-        print("LaTeX not available, using default fonts: DejaVu Serif")
-
 plt.rcParams['axes.labelsize'] = fs
 plt.rcParams['axes.titlesize'] = fs + 2
 plt.rcParams['xtick.labelsize'] = fs
