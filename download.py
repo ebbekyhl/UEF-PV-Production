@@ -20,8 +20,8 @@ def initial_cleaning(download_dir):
 
 def read_tmp(year_month, download_dir):
 
-    # Wait for up to 120 seconds for the file to appear
-    timeout = 180 # seconds
+    # Wait for up to 200 seconds for the file to appear
+    timeout = 200 # seconds
     waited = 0
     sleep_interval = 5 # seconds
 
