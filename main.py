@@ -72,7 +72,7 @@ fig, ax = plt.subplots(figsize=(8, 5))
 df.plot(ax=ax, legend=False, color="darkorange")
 
 ax.set_title("Daily production values")
-ax.set_ylabel("MWh")
+ax.set_ylabel("kWh")
 ax.set_xlabel("")
 ax.grid()
 
@@ -112,7 +112,7 @@ pd.Series(pvgis).loc[production_monthly_sum.index].plot(marker="X", ls="--", col
 # figure formatting
 ax_m.grid()
 ax_m.set_title("Monthly production values (" + year_months[-1][0:4] + ")")
-ax_m.set_ylabel("MWh")
+ax_m.set_ylabel("kWh")
 ax_m.set_xlabel("")
 ax_m.set_xticklabels(ax_m.get_xticklabels(), rotation=0, ha='center')
 ax_m.legend()
