@@ -49,5 +49,4 @@ jobs:
           from: ${{ secrets.EMAIL_USERNAME }}
           secure: true
           attachments: |
-            data/*.csv
-            data/*.png
+            figures/*.png
