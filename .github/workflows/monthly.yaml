@@ -24,11 +24,14 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add data/*.csv
-          git add figures/*.png
-          git commit -m "Added new production data" || echo "No changes to commit"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git push origin HEAD:main
+          git add data/*.csv figures/*.png || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Added updated production data"
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            git push origin HEAD:main
+          fi
 
       - name: Read email summary
         id: email
