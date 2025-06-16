@@ -30,21 +30,31 @@ jobs:
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git push origin HEAD:main
 
+      - name: Read email summary
+        id: email
+        run: |
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          cat email_summary.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Send email with attachments
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: smtp.gmail.com  # Or another SMTP server
+          server_address: smtp.gmail.com
           server_port: 465
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: PV Monthly Report - ${{ github.event.repository.name }}
           body: |
-            Hello,
+            Kære UEF medlemmer
 
-            Please find attached the latest monthly PV production summary and data.
+            Find vedhæftet den seneste månedlige PV produktionsoversigt.
 
-            Regards,
-            GitHub Actions Bot
+            ${{ steps.email.outputs.summary }}
+
+            Med venlig hilsen
+            UEF
+
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_USERNAME }}
           secure: true

@@ -64,6 +64,11 @@ production_monthly_mean = df.groupby(df.index.month).mean() # mean of production
 
 production_monthly_sum.index = production_monthly_sum.index.map(month_mapping)
 
+production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production value
+
+with open("email_summary.txt", "w") as f:
+    f.write(f"Total produktion for {year_month}: {production_last_month:.2f} kWh\n")
+
 ########################################################################################
 ########################### Daily production plot ######################################
 ########################################################################################
