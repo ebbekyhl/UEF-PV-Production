@@ -1,0 +1,7 @@
+This folder contains data acquired from the AURORA dashboard.
+
+Each file contains daily production values for a specific month. 
+
+The files are named with the following convention:
+
+`PV_production_Aarhus_{year}-{month}.csv`
