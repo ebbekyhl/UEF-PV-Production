@@ -40,6 +40,12 @@ jobs:
           cat email_summary.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Get latest monthly figure
+        id: latest_figure
+        run: |
+          latest_file=$(ls -t figures/*monthly.png | head -n 1)
+          echo "file=$latest_file" >> $GITHUB_OUTPUT
+
       - name: Send email with attachments
         uses: dawidd6/action-send-mail@v3
         with:
@@ -61,5 +67,4 @@ jobs:
           to: ${{ secrets.EMAIL_TO }}
           from: ${{ secrets.EMAIL_USERNAME }}
           secure: true
-          attachments: |
-            figures/*monthly.png
+          attachments: ${{ steps.latest_figure.outputs.file }}
