@@ -6,8 +6,8 @@ It first fetches data reported at the [AURORA dashboard](https://dashboard.auror
 
 Subsequently, the workflow creates two graphs that summarize the production within the past months (with daily and monthly resolution, respectively) and saves them in the `figures/` folder.
 
-The figure with monthly resolution is attached to an automatically generated email and shared with members of UEF (note that all sensitive data is encrypted and contained as secret variables).
+The figure with monthly resolution is attached to an automatically generated email and shared with recipients listed in the secret variable "EMAIL_TO".
 
-The workflow is run once every month.
+The workflow is run once every month (currently set to run on the 5th, to account for delays in the data reporting on the AURORA dashboard).
 
-![UEF PV installation production data](/figures/monthly_production_2025-05.png)
+![UEF PV installation production data](/figures/monthly_production_2025-07.png)
