@@ -65,11 +65,13 @@ jobs:
 
             Du kan selvfølgelig stadig følge med i produktionen ved at tilgå vores hjemmeside: https://www.uef.dk/installation-and-production
 
+            Vi gør opmærksom på, at denne rapportering foregår automatisk, og der kan derfor forekomme afvigelser i forhold til de faktiske produktionsdata.
+
             Med solrige hilsener
             UEF
 
-          to: ${{ secrets.EMAIL_TO }}
-          bcc: ${{ secrets.EMAIL_BCC_TEST }}
+          to: ${{ secrets.EMAIL_TO_MONTHLY }}
+          bcc: ${{ secrets.EMAIL_BCC_MONTHLY }}
           from: ${{ secrets.EMAIL_USERNAME }}
           secure: true
           attachments: ${{ steps.latest_figure.outputs.file }}

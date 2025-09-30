@@ -65,13 +65,15 @@ jobs:
 
             Du kan selvfølgelig stadig følge med i produktionen ved at tilgå vores hjemmeside: https://www.uef.dk/installation-and-production
 
+            Vi gør opmærksom på, at denne rapportering foregår automatisk, og der kan derfor forekomme afvigelser i forhold til de faktiske produktionsdata.
+
             Hvis du ikke ønsker at modtage disse kvartalsvise oversigter via email, kan du framelde dig ved at sende en mail til kassereruef@gmail.com med emnet "FRAMELD".
 
             Med solrige hilsener
             UEF
 
-          to: ${{ secrets.EMAIL_TO }}
-          bcc: ${{ secrets.EMAIL_BCC_TEST }}
+          to: ${{ secrets.EMAIL_TO_QUARTERLY }}
+          bcc: ${{ secrets.EMAIL_BCC_ALL }}
           from: ${{ secrets.EMAIL_USERNAME }}
           secure: true
           attachments: ${{ steps.latest_figure.outputs.file }}

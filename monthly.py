@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 
 download_dir = download_dir = os.path.abspath("data")  # choose where to save data
 
-month_mapping = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May",
-                    6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct",
+month_mapping = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Maj",
+                    6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Okt",
                     11: "Nov", 12: "Dec"}
 
 month_mapping_long = {1: "Januar", 2: "Februar", 3: "Marts", 4: "April", 5: "Maj",
