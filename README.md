@@ -1,6 +1,6 @@
 # UEF-PV-Production
 
-This repo uses GitHub Actions to create monthly or quarterly reports of the production from the [UEF](https://www.uef.dk/home) solar PV installation. 
+This repository uses GitHub Actions to create monthly or quarterly reports of the production from the [UEF](https://www.uef.dk/home) solar PV installation. 
 
 It acquires data from the [AURORA dashboard](https://dashboard.aurora-h2020.eu/en-GB/pv-data?site=DK01&month=2025-06) and saves it in the `data/` folder.
 
