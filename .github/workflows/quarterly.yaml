@@ -67,11 +67,11 @@ jobs:
 
             Hvis du ikke ønsker at modtage disse kvartalsvise oversigter via email, kan du framelde dig ved at sende en mail til kassereruef@gmail.com med emnet "FRAMELD".
 
-            Med venlig hilsen
+            Med solrige hilsener
             UEF
 
           to: ${{ secrets.EMAIL_TO }}
-          bcc: ${{ secrets.EMAIL_BCC }}
+          bcc: ${{ secrets.EMAIL_BCC_TEST }}
           from: ${{ secrets.EMAIL_USERNAME }}
           secure: true
           attachments: ${{ steps.latest_figure.outputs.file }}

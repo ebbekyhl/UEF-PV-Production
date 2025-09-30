@@ -2,7 +2,7 @@ name: Monthly Job
 
 on:
   schedule:
-    - cron: '0 0 5 * *'  # Fifth day of every month at midnight UTC
+    - cron: '0 0 6 * *'  # Sixth day of every month at midnight UTC (to avoid it does not run at the same time as the quarterly job)
   workflow_dispatch:     # Allows manual run for testing
 
 permissions:
@@ -53,21 +53,23 @@ jobs:
           server_port: 465
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: TEST. PV produktionsoversigt - ${{ github.event.repository.name }}
+          subject: Månedsoverblik - ${{ github.event.repository.name }}
           body: |
             Kære UEF medlemmer
 
-            (Dette er en automatisk genereret e-mail)
-    
-            Find vedhæftet den seneste måneds PV produktionsoversigt.
+            Her får I den samlede elproduktion fra vores fælles solcelleanlæg for den forgangne måned.
+
+            Se vedhæftet figur for denne oversigt. 
 
             ${{ steps.email.outputs.summary }}
 
-            Med venlig hilsen
+            Du kan selvfølgelig stadig følge med i produktionen ved at tilgå vores hjemmeside: https://www.uef.dk/installation-and-production
+
+            Med solrige hilsener
             UEF
 
           to: ${{ secrets.EMAIL_TO }}
-          bcc: ${{ secrets.EMAIL_BCC }}
+          bcc: ${{ secrets.EMAIL_BCC_TEST }}
           from: ${{ secrets.EMAIL_USERNAME }}
           secure: true
           attachments: ${{ steps.latest_figure.outputs.file }}

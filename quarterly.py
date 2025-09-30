@@ -70,7 +70,7 @@ plt.rcParams['legend.fontsize'] = fs
 
 # read data for every months contained in "year_months"
 df = pd.concat([pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv", sep=";") for month in year_months])
-df.rename(columns={"Ep":"Production"}, inplace=True)
+df.rename(columns={"Ep":"Produktion"}, inplace=True)
 
 # convert "date" into pd.datetime
 df["date"] = pd.to_datetime(df["date"])
