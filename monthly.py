@@ -202,5 +202,8 @@ for ax in [ax_m, ax_n, ax_i]:
 
 ax_i.legend().set_visible(False)
 
+# add copyright on bottom right of the figure
+fig.text(0.90, 0.01, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=12, color='gray', alpha=0.7)
+
 # savefig
 fig.savefig("figures/production_" + year_months[-1] + "_panel.png", bbox_inches='tight')
