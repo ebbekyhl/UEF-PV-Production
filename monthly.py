@@ -203,4 +203,4 @@ for ax in [ax_m, ax_n, ax_i]:
 ax_i.legend().set_visible(False)
 
 # savefig
-fig.savefig("figures/production_" + year_months[-1] + "_panel.png")
+fig.savefig("figures/production_" + year_months[-1] + "_panel.png", bbox_inches='tight')
