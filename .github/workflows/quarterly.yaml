@@ -1,8 +1,8 @@
-name: Monthly Job
+name: Quarterly Job
 
 on:
   schedule:
-    - cron: '0 0 5 * *'  # Fifth day of every month at midnight UTC
+    - cron: '0 0 5 1,4,7,10 *'  # Fifth day of every quarter at midnight UTC
   workflow_dispatch:     # Allows manual run for testing
 
 permissions:
@@ -18,7 +18,7 @@ jobs:
         run: pip install -r requirements.txt
       
       - name: Run Python script
-        run: python monthly.py
+        run: python quarterly.py
 
       - name: Commit and push new files
         run: |
@@ -53,15 +53,19 @@ jobs:
           server_port: 465
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: TEST. PV produktionsoversigt - ${{ github.event.repository.name }}
+          subject: Kvartalsoverblik - ${{ github.event.repository.name }}
           body: |
             Kære UEF medlemmer
 
-            (Dette er en automatisk genereret e-mail)
-    
-            Find vedhæftet den seneste måneds PV produktionsoversigt.
+            Som noget nyt sender vi hvert kvartal en oversigt ud til jer med den samlede elproduktion fra vores fælles solcelleanlæg for de sidste tre måneder.
+
+            Se vedhæftet figur for denne oversigt. 
 
             ${{ steps.email.outputs.summary }}
+
+            Du kan selvfølgelig stadig følge med i produktionen ved at tilgå vores hjemmeside: https://www.uef.dk/installation-and-production
+
+            Hvis du ikke ønsker at modtage disse kvartalsvise oversigter via email, kan du framelde dig ved at sende en mail til kassereruef@gmail.com med emnet "FRAMELD".
 
             Med venlig hilsen
             UEF

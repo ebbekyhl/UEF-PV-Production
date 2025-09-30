@@ -15,11 +15,27 @@ today = pd.Timestamp.now()
 
 print("Today is the " + str(today.day) + " of " + month_mapping[today.month])
 print("Last month was " + month_mapping[today.month - 1])
-months = np.arange(1, today.month)
-year = today.year
-year_months = [f"{year}-{month:02d}" for month in months]
+print("The month before that was " + month_mapping[today.month - 2])
+print("And the month before that was " + month_mapping[today.month - 3])
 
-for year_month in year_months:
+months = np.arange(1, today.month)
+year_earliest = 2025
+year_today = today.year
+year_months = [f"{year_today}-{month:02d}" for month in months]
+if year_earliest < year_today:
+    years = np.arange(year_earliest, year_today)
+    for year in years:
+        year_months += [f"{year}-{month:02d}" for month in np.arange(1, 13)]
+
+# list the files that are already downloaded 
+existing_files = os.listdir(download_dir)
+
+# missing files 
+year_months_download = [ym for ym in year_months if f"PV_production_Aarhus_{ym}.csv" not in existing_files]
+
+print(year_months_download)
+
+for year_month in year_months_download:
     download.download_pv_data(year_month,download_dir)
 
 # For comparison, we show the expected production from simulation:
@@ -64,10 +80,18 @@ production_monthly_mean = df.groupby(df.index.month).mean() # mean of production
 
 production_monthly_sum.index = production_monthly_sum.index.map(month_mapping)
 
-production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production value
+production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production values
+production_two_months_ago = production_monthly_sum.iloc[-2].item()  # get the production values for two months ago
+production_three_months_ago = production_monthly_sum.iloc[-3].item()  # get the production values for three months ago
+
+def format_number(number):
+    formatted_number = f"{number:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return formatted_number
 
 with open("email_summary.txt", "w") as f:
-    f.write(f"Total produktion for {year_month}: {production_last_month:.2f} kWh\n")
+    f.write(f"Samlet produktion for {year_months[-1]}: {format_number(production_last_month)} kWh\n")
+    f.write(f"Samlet produktion for {year_months[-2]}: {format_number(production_two_months_ago)} kWh\n")
+    f.write(f"Samlet produktion for {year_months[-3]}: {format_number(production_three_months_ago)} kWh\n")
 
 ########################################################################################
 ########################### Daily production plot ######################################
@@ -112,11 +136,11 @@ fig_m, ax_m = plt.subplots(figsize=(8, 5))
 production_monthly_sum.plot(kind="bar", ax=ax_m, color="darkorange", alpha=0.7, edgecolor="k", width=0.8)
 
 # add expected production from simulation
-pd.Series(pvgis).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Simulation", ax=ax_m)
+pd.Series(pvgis).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
 
 # figure formatting
 ax_m.grid()
-ax_m.set_title("Monthly production values (" + year_months[-1][0:4] + ")")
+ax_m.set_title("Månedlige produktionsværdier (" + year_months[-1][0:4] + ")")
 ax_m.set_ylabel("kWh")
 ax_m.set_xlabel("")
 ax_m.set_xticklabels(ax_m.get_xticklabels(), rotation=0, ha='center')
