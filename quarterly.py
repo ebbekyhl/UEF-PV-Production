@@ -88,10 +88,17 @@ def format_number(number):
     formatted_number = f"{number:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return formatted_number
 
+def extract_month_name(year_month):
+    return month_mapping[int(year_month.split("-")[1])]
+
+def extract_year(year_month):
+    return year_month.split("-")[0]
+
 with open("email_summary.txt", "w") as f:
-    f.write(f"Samlet produktion for {year_months[-1]}: {format_number(production_last_month)} kWh\n")
-    f.write(f"Samlet produktion for {year_months[-2]}: {format_number(production_two_months_ago)} kWh\n")
-    f.write(f"Samlet produktion for {year_months[-3]}: {format_number(production_three_months_ago)} kWh\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-3])} {extract_year(year_months[-3])}: {format_number(production_three_months_ago)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-2])} {extract_year(year_months[-2])}: {format_number(production_two_months_ago)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
+
 
 ########################################################################################
 ########################### Daily production plot ######################################
