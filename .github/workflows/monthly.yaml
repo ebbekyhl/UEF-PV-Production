@@ -43,7 +43,7 @@ jobs:
       - name: Get latest monthly figure
         id: latest_figure
         run: |
-          latest_file=$(ls -t figures/*monthly.png | head -n 1)
+          latest_file=$(ls -t figures/*panel.png | head -n 1)
           echo "file=$latest_file" >> $GITHUB_OUTPUT
 
       - name: Send email with attachments

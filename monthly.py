@@ -151,3 +151,56 @@ ax_m.legend()
 
 # savefig
 fig_m.savefig("figures/production_" + year_months[-1] + "_monthly.png")
+
+########################################################################################
+################################## Panel ###############################################
+########################################################################################
+
+solar_color = "#f9a202"
+production_monthly_sum_cum = production_monthly_sum.cumsum()
+
+# make panel of figures (two subfigures in the top row and one wide figure in the bottom row)
+fig = plt.figure(figsize=(14,8))
+gs = fig.add_gridspec(2, 2, height_ratios=[1.2,1])  # 2 rows, 2 cols
+
+# add space between subfigures
+gs.update(hspace=0.3, wspace=0.15)
+
+# fig, axs = plt.subplots(1, 2, figsize=(14, 5))
+ax_m = fig.add_subplot(gs[0,0])
+ax_m.set_title("Månedlige produktionsværdier (MWh)")
+
+# bar plot of monthly production
+(production_monthly_sum/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7)
+
+# add expected production from simulation
+(pd.Series(pvgis)/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
+
+ax_n = fig.add_subplot(gs[0,1])
+ax_n.set_title("Kumuleret produktion (MWh)")
+
+# add expected production from simulation
+(pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
+
+# bar plot of monthly production
+(production_monthly_sum_cum/1e3).plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10)
+
+ax_i = fig.add_subplot(gs[1,:])
+ax_i.set_title("Daglig produktion (kWh)")
+df.plot(ax= ax_i, lw = 1, alpha=0.6, color = solar_color, label = "_nolegend_")
+
+# Layout 
+for ax in [ax_m, ax_n, ax_i]:
+    # hide upper and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.grid(lw = 0.5, ls='--', color='gray', alpha=0.7)
+    ax.legend()
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha='center')
+    ax.set_ylabel("")
+    ax.set_xlabel("")
+
+ax_i.legend().set_visible(False)
+
+# savefig
+fig_m.savefig("figures/panel_" + year_months[-1] + ".png")

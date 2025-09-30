@@ -1,9 +1,9 @@
 name: Quarterly Job
 
-on:
-  schedule:
-    - cron: '0 0 5 1,4,7,10 *'  # Fifth day of every quarter at midnight UTC
-  workflow_dispatch:     # Allows manual run for testing
+# on:
+#   schedule:
+#     - cron: '0 0 5 1,4,7,10 *'  # Fifth day of every quarter at midnight UTC
+#   workflow_dispatch:     # Allows manual run for testing
 
 permissions:
   contents: write
