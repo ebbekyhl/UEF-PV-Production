@@ -10,6 +10,10 @@ month_mapping = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May",
                     6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct",
                     11: "Nov", 12: "Dec"}
 
+month_mapping_long = {1: "Januar", 2: "Februar", 3: "Marts", 4: "April", 5: "Maj",
+                    6: "Juni", 7: "Juli", 8: "August", 9: "September", 10: "Oktober",
+                    11: "November", 12: "December"}
+
 # Get the date of today
 today = pd.Timestamp.now()
 
@@ -89,16 +93,15 @@ def format_number(number):
     return formatted_number
 
 def extract_month_name(year_month):
-    return month_mapping[int(year_month.split("-")[1])]
+    return month_mapping_long[int(year_month.split("-")[1])]
 
 def extract_year(year_month):
     return year_month.split("-")[0]
 
-with open("email_summary.txt", "w") as f:
+with open("email_summary.txt", "w", newline="") as f:
     f.write(f"Samlet produktion for {extract_month_name(year_months[-3])} {extract_year(year_months[-3])}: {format_number(production_three_months_ago)} kWh\r\n")
     f.write(f"Samlet produktion for {extract_month_name(year_months[-2])} {extract_year(year_months[-2])}: {format_number(production_two_months_ago)} kWh\r\n")
     f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
-
 
 ########################################################################################
 ########################### Daily production plot ######################################
