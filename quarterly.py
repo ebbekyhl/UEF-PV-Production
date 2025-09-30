@@ -31,12 +31,12 @@ if year_earliest < year_today:
 existing_files = os.listdir(download_dir)
 
 # missing files 
-year_months_download = [ym for ym in year_months if f"PV_production_Aarhus_{ym}.csv" not in existing_files]
+year_months_downloads = [ym for ym in year_months if f"PV_production_Aarhus_{ym}.csv" not in existing_files]
 
-print(year_months_download)
+print(year_months_downloads)
 
-for year_month in year_months_download:
-    download.download_pv_data(year_month,download_dir)
+for year_month_download in year_months_downloads:
+    download.download_pv_data(year_month_download,download_dir)
 
 # For comparison, we show the expected production from simulation:
 pvgis = {"Jan": 895.7,
@@ -123,7 +123,7 @@ text = production_monthly_sum.index[-1] + " " +  year_months[-1][0:4]
 ax.text(x_text, y_text - y_range*0.00001, text, ha='center', va='top', transform=ax.transAxes, fontsize=fs, color="k", alpha=0.75)
 
 # savefig
-fig.savefig("figures/production_" + year_month + "_daily.png")
+fig.savefig("figures/production_" + year_months[-1] + "_daily.png")
 
 ########################################################################################
 ########################### Monthly production plot ####################################
@@ -147,4 +147,4 @@ ax_m.set_xticklabels(ax_m.get_xticklabels(), rotation=0, ha='center')
 ax_m.legend()
 
 # savefig
-fig_m.savefig("figures/production_" + year_month + "_monthly.png")
+fig_m.savefig("figures/production_" + year_months[-1] + "_monthly.png")
