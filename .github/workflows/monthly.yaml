@@ -2,7 +2,7 @@ name: Monthly Job
 
 on:
   schedule:
-    - cron: '0 0 6 * *'  # Sixth day of every month at midnight UTC (to avoid it does not run at the same time as the quarterly job)
+    - cron: '0 0 5 * *'  # Fifth day of every month at midnight UTC (to avoid it does not run at the same time as the quarterly job)
   workflow_dispatch:     # Allows manual run for testing
 
 permissions:

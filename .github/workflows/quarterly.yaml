@@ -1,9 +1,9 @@
 name: Quarterly Job
 
-# on:
-#   schedule:
-#     - cron: '0 0 5 1,4,7,10 *'  # Fifth day of every quarter at midnight UTC
-#   workflow_dispatch:     # Allows manual run for testing
+on:
+  schedule:
+    - cron: '0 0 6 1,4,7,10 *'  # Sixth day of every quarter at midnight UTC
+  workflow_dispatch:     # Allows manual run for testing
 
 permissions:
   contents: write
@@ -43,7 +43,7 @@ jobs:
       - name: Get latest monthly figure
         id: latest_figure
         run: |
-          latest_file=$(ls -t figures/*monthly.png | head -n 1)
+          latest_file=$(ls -t figures/*panel.png | head -n 1)
           echo "file=$latest_file" >> $GITHUB_OUTPUT
 
       - name: Send email with attachments
@@ -72,8 +72,8 @@ jobs:
             Med solrige hilsener
             UEF
 
-          to: ${{ secrets.EMAIL_TO_QUARTERLY }}
-          bcc: ${{ secrets.EMAIL_BCC_ALL }}
+          to: ${{ secrets.EMAIL_TO_MONTHLY }}
+          bcc: ${{ secrets.EMAIL_BCC_MONTHLY }}
           from: ${{ secrets.EMAIL_USERNAME }}
           secure: true
           attachments: ${{ steps.latest_figure.outputs.file }}
