@@ -262,7 +262,7 @@ ax[2].annotate("Negativ spotpris",
                color= red_color)
 
 ax2_plot = g_prices["SpotPriceDKK"].resample("d").mean()
-ax[2].set_ylim([0, g_prices["SpotPriceDKK"].max()*1.1])
+ax[2].set_ylim([-0.7, g_prices["ElPriceDKK"].max()*1.1])
 ax[2].set_xticks(ax[0].get_xticks(minor=True), minor=True)
 ax[2].set_xticklabels(ax[0].get_xticklabels())
 ax[2].axhline(y=fixed_price, color="k", linestyle='--', lw = 1)
