@@ -98,6 +98,9 @@ production_monthly_sum = df.groupby(df.index.month).sum() # sum of production pe
 production_monthly_mean = df.groupby(df.index.month).mean() # mean of production per month
 
 production_monthly_sum.index = production_monthly_sum.index.map(month_mapping)
+production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
+
+production_monthly_sum_cum = production_monthly_sum.cumsum()
 
 production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production values
 
@@ -188,7 +191,6 @@ names = {'BioGas': "Biogas",
 solar_color = "#f9a202"
 blue_color = "#1f77b4"
 red_color = "#b93020"
-production_monthly_sum_cum = production_monthly_sum.cumsum()
 
 aspect_ratio = 11.69 / 8.27
 fig0, ax = plt.subplots(figsize=(10*aspect_ratio,10), nrows = 3, sharex=False)
