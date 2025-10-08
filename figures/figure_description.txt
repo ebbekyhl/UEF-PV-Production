@@ -1,9 +1,0 @@
-This folder contains figures summarizing the production data. It includes daily and monthly resolution data.
-
-Every month a new set of figures is generated with the following naming convention:
-
-`production_{year}-{month}_daily.png`
-
-`production_{year}-{month}_monthly.png`
-
-`production_{year}-{month}_panel.png`
