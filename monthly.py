@@ -299,7 +299,7 @@ pngs = ["figures/production_" + year_months[-1] + "_panelA.png",
         "figures/production_" + year_months[-1] + "_panelB.png"]
 
 # --- Make a PDF with those PNGs as pages ---
-with PdfPages("UEF_rapport.pdf") as pdf:
+with PdfPages("figures/UEF_rapport.pdf") as pdf:
     for path in pngs:
         img = mpimg.imread(path)
         h, w = img.shape[:2]
