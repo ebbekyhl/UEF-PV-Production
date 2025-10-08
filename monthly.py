@@ -56,6 +56,21 @@ pvgis = {"Jan": 895.7,
         "Nov": 1108.7,
         "Dec": 562.9}
 
+# For now, assume the following self-consumptions:
+self_consumption_ratio = pd.Series({"Jan": 0.85,
+                          "Feb": 0.85,
+                          "Mar": 0.85,
+                          "Apr": 0.85,
+                            "Maj": 0.85,
+                            "Jun": 0.85,
+                            "Jul": 0.85,
+                            "Aug": 0.85,
+                            "Sep": 0.85,
+                            "Okt": 0.85,
+                            "Nov": 0.85,
+                            "Dec": 0.85
+                            })
+
 # plotting configuration
 fs = 14
 plt.rcParams['axes.labelsize'] = fs
@@ -172,6 +187,7 @@ names = {'BioGas': "Biogas",
 
 solar_color = "#f9a202"
 blue_color = "#1f77b4"
+red_color = "#b93020"
 production_monthly_sum_cum = production_monthly_sum.cumsum()
 
 aspect_ratio = 11.69 / 8.27
@@ -216,6 +232,16 @@ ax[2].fill_between(prices_low.index,
                    alpha=0.5, 
                    zorder = 0)
 
+neg_prices = g_prices["SpotPriceDKK"].copy()
+neg_prices[neg_prices >= 0] = np.nan 
+ax[2].fill_between(neg_prices.index, 
+                   0, 
+                   neg_prices, 
+                   color=red_color, 
+                   lw = 1,
+                   alpha=1, 
+                   zorder = 0)
+
 no_hours_above = prices_high.loc[price_above].shape[0]
 ax[2].annotate("Fast pris", 
                xy=(pd.to_datetime("7/7/2025"), 1.9),
@@ -227,6 +253,11 @@ ax[2].annotate(f"{no_hours_above} timer over fast pris",
                ha='left',
                fontsize=fs,
                color= blue_color)
+ax[2].annotate("Negativ spotpris", 
+               xy=(pd.to_datetime("7/7/2025"), -0.55),
+               ha='left',
+               fontsize=fs,
+               color= red_color)
 
 ax2_plot = g_prices["SpotPriceDKK"].resample("d").mean()
 ax[2].set_ylim([0, g_prices["SpotPriceDKK"].max()*1.1])
@@ -282,6 +313,11 @@ ax_m.set_title("Månedlige produktionsværdier (MWh)")
 
 # bar plot of monthly production
 (production_monthly_sum/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7)
+self_consumption = production_monthly_sum["Produktion 2025"]*self_consumption_ratio.loc[production_monthly_sum.index]
+(self_consumption/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.4, 
+                            edgecolor="k", 
+                            hatch="/",
+                            width=0.7)
 
 # add expected production from simulation
 (pd.Series(pvgis)/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
@@ -292,8 +328,9 @@ ax_n.set_title("Kumuleret produktion (MWh)")
 # add expected production from simulation
 (pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
 
-# bar plot of monthly production
+# cumulative sum of monthly production
 (production_monthly_sum_cum/1e3).plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10)
+(self_consumption.cumsum()/1e3).plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug")
 
 # Daily production
 ax_i = fig.add_subplot(gs[1,:])
@@ -326,6 +363,13 @@ for ax in [ax_m, ax_n, ax_i, ax_k]:
 ax_m.legend().set_visible(False)
 ax_i.legend().set_visible(False)
 ax_k.legend().set_visible(False)
+
+# add hatch to legend in ax_m
+handles, labels = ax_m.get_legend_handles_labels()
+hatch_handle = plt.Rectangle((0,0),1,1, facecolor="white", edgecolor="k", hatch="//", alpha=0.4)
+handles.append(hatch_handle)
+labels.append("Egetforbrug")
+ax_m.legend(handles[-1:], labels[-1:], bbox_to_anchor=(0.02, 0.98), loc='upper left', borderaxespad=0.)
 
 # add copyright on bottom right of the figure
 fig.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
