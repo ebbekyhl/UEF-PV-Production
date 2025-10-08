@@ -241,7 +241,7 @@ fig0.subplots_adjust(hspace=0.4)
 ax[0].legend().set_visible(False)
 ax[0].set_title("Daglig Elproduktion i DK1 [GWh]")
 ax[1].set_title(r"Daglig CO$_2$ intensitet i DK1 [gCO$_2$/kWh]")
-ax[2].set_title("Spotpris + Nettarif (ex. elafgift) i DK1 [DKK/kWh]")
+ax[2].set_title("Spotpris + Nettarif (ekskl. elafgift) i DK1 [DKK/kWh]")
 
 # Layout 
 for ax_i in ax:
