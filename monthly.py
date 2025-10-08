@@ -146,7 +146,7 @@ g_prices["SpotPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
 
 net_tariffs = 7.63 + 9.25 + 22.60 # Transmissionsnettarif + Systemtarif + Nettarif (all in cents/kWh)
 # https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
-g_prices["SpotPriceDKK"] += net_tariffs / 100
+g_prices["ElPriceDKK"] = g_prices["SpotPriceDKK"] + net_tariffs / 100
 
 carriers = ['BioGas', 'Straw', 'Wood', 'FossilGas', 'Coal', 'Fossil Oil',
               'Waste', 'Hydro', 'Solar', 'WindOffshore', 'WindOnshore']
@@ -209,13 +209,13 @@ ax[1].set_xticks(ax[0].get_xticks(minor=True), minor=True)
 ax[1].set_xticklabels(ax[0].get_xticklabels())
 
 fixed_price = 1.7
-price_above = g_prices["SpotPriceDKK"] > fixed_price
-price_below = g_prices["SpotPriceDKK"] <= fixed_price
+price_above = g_prices["ElPriceDKK"] > fixed_price
+price_below = g_prices["ElPriceDKK"] <= fixed_price
 
-prices_high = g_prices["SpotPriceDKK"].copy()
+prices_high = g_prices["ElPriceDKK"].copy()
 prices_high.loc[price_below] = np.nan
 
-prices_low = g_prices["SpotPriceDKK"].copy()
+prices_low = g_prices["ElPriceDKK"].copy()
 prices_low.loc[price_above] = fixed_price
 
 ax[2].fill_between(prices_high.index, 
@@ -261,7 +261,6 @@ ax[2].annotate("Negativ spotpris",
                fontsize=fs,
                color= red_color)
 
-ax2_plot = g_prices["SpotPriceDKK"].resample("d").mean()
 ax[2].set_ylim([-0.7, g_prices["ElPriceDKK"].max()*1.1])
 ax[2].set_xticks(ax[0].get_xticks(minor=True), minor=True)
 ax[2].set_xticklabels(ax[0].get_xticklabels())
@@ -315,7 +314,7 @@ ax_m.set_title("Månedlige produktionsværdier (MWh)")
 
 # bar plot of monthly production
 (production_monthly_sum/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7)
-self_consumption = production_monthly_sum["Produktion 2025"]*self_consumption_ratio.loc[production_monthly_sum.index]
+self_consumption = production_monthly_sum["Produktion " + year_months[-1][0:4]]*self_consumption_ratio.loc[production_monthly_sum.index]
 (self_consumption/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.4, 
                             edgecolor="k", 
                             hatch="/",
@@ -328,11 +327,11 @@ ax_n = fig.add_subplot(gs[0,1])
 ax_n.set_title("Kumuleret produktion (MWh)")
 
 # add expected production from simulation
-(pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
+(pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet produktion", ax=ax_n)
 
 # cumulative sum of monthly production
 (production_monthly_sum_cum/1e3).plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10)
-(self_consumption.cumsum()/1e3).plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug")
+(self_consumption.cumsum()/1e3).plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug " + year_months[-1][0:4])
 
 # Daily production
 ax_i = fig.add_subplot(gs[1,:])
