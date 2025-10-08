@@ -354,7 +354,7 @@ for ax in [ax_m, ax_n, ax_i, ax_k]:
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.grid(lw = 0.5, ls='--', color='gray', alpha=0.7)
-    ax.legend(loc = "best")
+    ax.legend(loc = "best", prop = {'size': fs-2})
     ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha='center')
     ax.set_ylabel("")
     ax.set_xlabel("")
@@ -370,7 +370,11 @@ handles, labels = ax_m.get_legend_handles_labels()
 hatch_handle = plt.Rectangle((0,0),1,1, facecolor="white", edgecolor="k", hatch="//", alpha=0.4)
 handles.append(hatch_handle)
 labels.append("Egetforbrug")
-ax_m.legend(handles[-1:], labels[-1:], bbox_to_anchor=(0.02, 0.98), loc='upper left', borderaxespad=0.)
+ax_m.legend(handles[-3:], labels[-3:], 
+            bbox_to_anchor=(0.02, 0.98), 
+            loc='upper left', 
+            borderaxespad=0., 
+            prop = {'size': fs-2})
 
 # add copyright on bottom right of the figure
 fig.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
