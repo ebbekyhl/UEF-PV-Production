@@ -13,3 +13,5 @@ The created figure is attached to an automatically generated email and shared wi
 The workflow is run once every month (currently set to run on the 5th, to account for delays in the data reporting on the AURORA dashboard) or quarterly.
 
 ![UEF PV installation production data](/figures/production_panelA.png)
+
+![UEF PV installation production data](/figures/production_panelB.png)
