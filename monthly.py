@@ -223,7 +223,7 @@ fig0.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.91, 0.88), loc='upper
 # add copyright on bottom right of the figure
 fig0.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
 # savefig
-fig0.savefig("figures/production_" + year_months[-1] + "_panelA.png", bbox_inches='tight')
+fig0.savefig("figures/production_panelB.png", bbox_inches='tight')
 
 ########################################################################################
 ################################## Panel B #############################################
@@ -290,13 +290,13 @@ ax_k.legend().set_visible(False)
 
 # add copyright on bottom right of the figure
 fig.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
-fig.savefig("figures/production_" + year_months[-1] + "_panelB.png", bbox_inches='tight')
+fig.savefig("figures/production_panelA.png", bbox_inches='tight')
 
 ########################################################################################
 ############################# Save panel A and B #######################################
 ########################################################################################
-pngs = ["figures/production_" + year_months[-1] + "_panelA.png", 
-        "figures/production_" + year_months[-1] + "_panelB.png"]
+pngs = ["figures/production_panelA.png", 
+        "figures/production_panelB.png"]
 
 # --- Make a PDF with those PNGs as pages ---
 with PdfPages("figures/UEF_rapport.pdf") as pdf:
