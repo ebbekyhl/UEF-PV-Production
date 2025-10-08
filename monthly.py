@@ -3,6 +3,9 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.image as mpimg
+import os
 
 download_dir = download_dir = os.path.abspath("data")  # choose where to save data
 
@@ -97,68 +100,223 @@ with open("email_summary.txt", "w", newline="") as f:
     f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
 
 ########################################################################################
-########################### Daily production plot ######################################
+########################### Read grid data #############################################
 ########################################################################################
+start = '2025-01-01'
+today = pd.Timestamp.now()
+end = str(today.year) + "-" + str(today.month).zfill(2) + "-" + (str(today.day - 6).zfill(2))
+url_emissions = f'https://api.energidataservice.dk/dataset/DeclarationProduction?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
+url_prices = f'https://api.energidataservice.dk/dataset/Elspotprices?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
 
-fig, ax = plt.subplots(figsize=(8, 5))
-df.plot(ax=ax, legend=False, color="darkorange")
+# from url_emissions, we can calculate CO2 emissions offset
+g_emissions = pd.read_json(url_emissions)
+g_emissions = pd.json_normalize(g_emissions["records"])
+g_emissions.index = pd.to_datetime(g_emissions["HourDK"])
+df_emissions = g_emissions[['ProductionType', 'CO2PerkWh', 'Production_MWh']]
+df_emissions.sort_index(inplace=True)
+df_emissions_tCO2 = df_emissions["CO2PerkWh"]*df_emissions["Production_MWh"]*1000 # gCO2
+df_emissions_production = df_emissions["Production_MWh"]*1000 # kWh
+df_emissions_tCO2_d = df_emissions_tCO2.resample("d").sum()
+df_emissions_production_d = df_emissions_production.resample("d").sum()
+df_emissions_intensity = df_emissions_tCO2_d / df_emissions_production_d # gCO2/kWh 
 
-ax.set_title("Daily production values")
-ax.set_ylabel("kWh")
-ax.set_xlabel("")
-ax.grid()
+# from url_prices, we can calculate savings for AU
+g_prices = pd.read_json(url_prices)
+g_prices = pd.json_normalize(g_prices["records"])
+g_prices.index = pd.to_datetime(g_prices["HourDK"])
+g_prices["SpotPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
 
-# add a double-directed arrow just below the graph of the last month 
-arrowprops = dict(arrowstyle="<->", lw=2, color="gray")
+net_tariffs = 7.63 + 9.25 + 22.60 # Transmissionsnettarif + Systemtarif + Nettarif (all in cents/kWh)
+# https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
+g_prices["SpotPriceDKK"] += net_tariffs / 100
 
-subtract = 1/len(year_months)  # calculate the width of the arrow based on the number of months
-y_mean = production_monthly_mean.iloc[-1].item()
-y_range = ax.get_ylim()[1] - ax.get_ylim()[0]
-y_text = 1 - y_mean/y_range
-x_text = (2 - subtract)/2 
+carriers = ['BioGas', 'Straw', 'Wood', 'FossilGas', 'Coal', 'Fossil Oil',
+              'Waste', 'Hydro', 'Solar', 'WindOffshore', 'WindOnshore']
+date_time_series = pd.date_range(start=df_emissions.index.min(), end=df_emissions.index.max(), freq='H')
+df_emissions_carrier = pd.DataFrame(index = date_time_series)
+for carrier in carriers:
+    index = df_emissions.query(f"ProductionType == '{carrier}'")["Production_MWh"].drop_duplicates().index
+    # get common index
+    common_index = date_time_series.intersection(index)
+    df_i = df_emissions.query(f"ProductionType == '{carrier}'")["Production_MWh"].drop_duplicates().loc[common_index]
+    df_i = df_i.groupby(df_i.index).sum()
+    df_emissions_carrier.loc[common_index, carrier] = df_i.values
 
-ax.annotate("", xy=(1.0, y_text), xytext=(1.0 - subtract, y_text), 
-            xycoords='axes fraction', textcoords='axes fraction',
-            arrowprops=arrowprops)
+colors = {'BioGas': "#fbeb90ff",
+          'Straw': "#e2e27c", 
+          'Wood': "#88a253",
+          'FossilGas': "#564640",
+          'Coal': "#000000",
+          'Fossil Oil': "#4d4d4d",
+          'Waste': "#9F8D71",
+          'Hydro': "#37a297",
+          'Solar': "#ffce3b",
+          'WindOffshore': "#6389f3",
+          'WindOnshore': "#1f6cc3"}
 
-text = production_monthly_sum.index[-1] + " " +  year_months[-1][0:4]
-
-ax.text(x_text, y_text - y_range*0.00001, text, ha='center', va='top', transform=ax.transAxes, fontsize=fs, color="k", alpha=0.75)
-
-# savefig
-fig.savefig("figures/production_" + year_months[-1] + "_daily.png")
+names = {'BioGas': "Biogas", 
+          'Straw': "Strå", 
+          'Wood': "Træ",
+          'FossilGas': "Naturgas",
+          'Coal': "Kul",
+          'Fossil Oil': "Olie",
+          'Waste': "Affald",
+          'Hydro': "Vandkraft",
+          'Solar': "Sol",
+          'WindOffshore': "Havvind",
+          'WindOnshore': "Landvind"}
 
 ########################################################################################
-########################### Monthly production plot ####################################
-########################################################################################
-
-# initialize figure
-fig_m, ax_m = plt.subplots(figsize=(8, 5))
-
-# bar plot of monthly production
-production_monthly_sum.plot(kind="bar", ax=ax_m, color="darkorange", alpha=0.7, edgecolor="k", width=0.8)
-
-# add expected production from simulation
-pd.Series(pvgis).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
-
-# figure formatting
-ax_m.grid()
-ax_m.set_title("Månedlige produktionsværdier (" + year_months[-1][0:4] + ")")
-ax_m.set_ylabel("kWh")
-ax_m.set_xlabel("")
-ax_m.set_xticklabels(ax_m.get_xticklabels(), rotation=0, ha='center')
-ax_m.legend()
-
-# savefig
-fig_m.savefig("figures/production_" + year_months[-1] + "_monthly.png")
-
-########################################################################################
-################################## Panel ###############################################
+################################## Panel A #############################################
 ########################################################################################
 
 solar_color = "#f9a202"
 production_monthly_sum_cum = production_monthly_sum.cumsum()
 
+aspect_ratio = 11.69 / 8.27
+fig0, ax = plt.subplots(figsize=(10*aspect_ratio,10), nrows = 3, sharex=False)
+
+shares = df_emissions_carrier.sum()/(df_emissions_carrier.sum().sum())*100
+
+df_emissions_carrier = df_emissions_carrier[shares[shares > 0.1].index]
+
+(df_emissions_carrier.resample("d").sum()/1e3).rename(columns=names).plot.area(stacked=True, 
+                                                                               linewidth = 0, 
+                                                                               color = [colors[col] for col in df_emissions_carrier.columns], ax=ax[0])
+
+ax[1].fill_between(df_emissions_intensity.index, 0, df_emissions_intensity, color='lightgray', alpha=1, zorder = 0)
+ax[1].set_ylim([0, df_emissions_intensity.max()*1.1])
+ax[1].set_xticks(ax[0].get_xticks(minor=True), minor=True)
+ax[1].set_xticklabels(ax[0].get_xticklabels())
+
+ax2_plot = g_prices["SpotPriceDKK"].resample("d").mean()
+ax[2].fill_between(ax2_plot.index, 0, ax2_plot, color='lightblue', alpha=1, zorder = 0)
+ax[2].set_ylim([0, ax2_plot.max()*1.1])
+ax[2].set_xticks(ax[0].get_xticks(minor=True), minor=True)
+ax[2].set_xticklabels(ax[0].get_xticklabels())
+
+# add space between subplots
+fig0.subplots_adjust(hspace=0.4)
+
+# remove legend 
+ax[0].legend().set_visible(False)
+ax[0].set_title("Daglig Elproduktion i DK1 [GWh]")
+ax[1].set_title(r"Daglig CO$_2$ intensitet i DK1 [gCO$_2$/kWh]")
+ax[2].set_title("Daglig Spotpris + Nettarif i DK1 [DKK/kWh]")
+
+# Layout 
+for ax_i in ax:
+    # hide upper and right spines
+    ax_i.spines['top'].set_visible(False)
+    ax_i.spines['right'].set_visible(False)
+    ax_i.grid(lw = 0.5, ls='--', color='gray', alpha=0.7)
+    # ax_i.legend(loc = "best")
+    ax_i.set_xticklabels(ax_i.get_xticklabels(), rotation=0, ha='center')
+    ax_i.set_ylabel("")
+    ax_i.set_xlabel("")
+    ax_i.set_xlim([df_emissions_carrier.index.min(), df_emissions_carrier.index.max()])
+
+# reverse legend order
+handles, labels = ax[0].get_legend_handles_labels()
+fig0.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.91, 0.88), loc='upper left', borderaxespad=0.)
+
+# add copyright on bottom right of the figure
+fig0.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+# savefig
+fig0.savefig("figures/production_" + year_months[-1] + "_panelA.png", bbox_inches='tight')
+
+########################################################################################
+################################## Panel B #############################################
+########################################################################################
+fig = plt.figure(figsize=(10*aspect_ratio,10))
+gs = fig.add_gridspec(3, 2, height_ratios=[1.4,
+                                           0.7,
+                                           0.7
+                                           ]) 
+
+# add space between subfigures
+gs.update(hspace=0.4, wspace=0.15)
+
+# fig, axs = plt.subplots(1, 2, figsize=(14, 5))
+ax_m = fig.add_subplot(gs[0,0])
+ax_m.set_title("Månedlige produktionsværdier (MWh)")
+
+# bar plot of monthly production
+(production_monthly_sum/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7)
+
+# add expected production from simulation
+(pd.Series(pvgis)/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
+
+ax_n = fig.add_subplot(gs[0,1])
+ax_n.set_title("Kumuleret produktion (MWh)")
+
+# add expected production from simulation
+(pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
+
+# bar plot of monthly production
+(production_monthly_sum_cum/1e3).plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10)
+
+# Daily production
+ax_i = fig.add_subplot(gs[1,:])
+ax_i.set_title("Daglig produktion (kWh)")
+df.plot(ax= ax_i, lw = 0, alpha=1, color = solar_color)
+ax_i.fill_between(df.index, 0, df["Produktion"], color=solar_color, alpha=0.3, zorder = 0)
+ax_i.set_ylim(0, ax_i.get_ylim()[1])
+
+# Avoided CO2 emissions
+ax_k = fig.add_subplot(gs[2,:])
+ax_k.set_title(r"Kumuleret potentielt undgået CO$_2$ (tCO$_2$)") # CO2 udledninger undgået ved egenproduktion
+CO2_avoided = df_emissions_intensity * df["Produktion"]  
+(CO2_avoided.cumsum()/1e6).plot(ax=ax_k, color='green', lw=1, alpha=0.7, label="Undgået CO2")
+ax_k.fill_between(CO2_avoided.cumsum().index, 0, CO2_avoided.cumsum()/1e6, color='lightgreen', alpha=0.3, zorder = 0)
+ax_k.set_ylim(0, ax_k.get_ylim()[1])
+
+# Layout 
+for ax in [ax_m, ax_n, ax_i, ax_k]:
+    # hide upper and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.grid(lw = 0.5, ls='--', color='gray', alpha=0.7)
+    ax.legend(loc = "best")
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha='center')
+    ax.set_ylabel("")
+    ax.set_xlabel("")
+    if ax != ax_m and ax != ax_n:
+        ax.set_xlim([df.index.min(), df.index.max()])
+
+ax_m.legend().set_visible(False)
+ax_i.legend().set_visible(False)
+ax_k.legend().set_visible(False)
+
+# add copyright on bottom right of the figure
+fig.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+fig.savefig("figures/production_" + year_months[-1] + "_panelB.png", bbox_inches='tight')
+
+########################################################################################
+############################# Save panel A and B #######################################
+########################################################################################
+pngs = ["figures/production_" + year_months[-1] + "_panelA.png", 
+        "figures/production_" + year_months[-1] + "_panelB.png"]
+
+# --- Make a PDF with those PNGs as pages ---
+with PdfPages("UEF_rapport.pdf") as pdf:
+    for path in pngs:
+        img = mpimg.imread(path)
+        h, w = img.shape[:2]
+
+        # Create a figure sized to the image (1:1 at 100 dpi = w/100 by h/100 inches)
+        dpi = 100.0
+        fig_PDF = plt.figure(figsize=(w/dpi, h/dpi), dpi=dpi)
+        ax = plt.axes([0, 0, 1, 1])  # full-bleed
+        ax.imshow(img)
+        ax.axis("off")
+
+        pdf.savefig(fig_PDF)   # embeds the PNG raster on its own PDF page
+        plt.close(fig_PDF)
+
+########################################################################################
+################################## Panel simple ########################################
+########################################################################################
 # make panel of figures (two subfigures in the top row and one wide figure in the bottom row)
 fig = plt.figure(figsize=(14,8))
 gs = fig.add_gridspec(2, 2, height_ratios=[1.2,1])  # 2 rows, 2 cols
