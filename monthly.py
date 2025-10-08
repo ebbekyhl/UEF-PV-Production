@@ -167,10 +167,11 @@ names = {'BioGas': "Biogas",
           'WindOnshore': "Landvind"}
 
 ########################################################################################
-################################## Panel A #############################################
+################################## Panel B #############################################
 ########################################################################################
 
 solar_color = "#f9a202"
+blue_color = "#1f77b4"
 production_monthly_sum_cum = production_monthly_sum.cumsum()
 
 aspect_ratio = 11.69 / 8.27
@@ -189,11 +190,49 @@ ax[1].set_ylim([0, df_emissions_intensity.max()*1.1])
 ax[1].set_xticks(ax[0].get_xticks(minor=True), minor=True)
 ax[1].set_xticklabels(ax[0].get_xticklabels())
 
+fixed_price = 1.7
+price_above = g_prices["SpotPriceDKK"] > fixed_price
+price_below = g_prices["SpotPriceDKK"] <= fixed_price
+
+prices_high = g_prices["SpotPriceDKK"].copy()
+prices_high.loc[price_below] = np.nan
+
+prices_low = g_prices["SpotPriceDKK"].copy()
+prices_low.loc[price_above] = fixed_price
+
+ax[2].fill_between(prices_high.index, 
+                   fixed_price, 
+                   prices_high, 
+                   color=blue_color, 
+                   lw = 1,
+                   alpha=1, 
+                   zorder = 0)
+
+ax[2].fill_between(prices_low.index, 
+                   0, 
+                   prices_low, 
+                   color=blue_color, 
+                   lw = 0,
+                   alpha=0.5, 
+                   zorder = 0)
+
+no_hours_above = prices_high.loc[price_above].shape[0]
+ax[2].annotate("Fast pris", 
+               xy=(pd.to_datetime("7/7/2025"), 1.9),
+               ha='left',
+               fontsize=fs,
+               color= "k")
+ax[2].annotate(f"{no_hours_above} timer over fast pris", 
+               xy=(pd.to_datetime("7/7/2025"), 3.5),
+               ha='left',
+               fontsize=fs,
+               color= blue_color)
+
 ax2_plot = g_prices["SpotPriceDKK"].resample("d").mean()
-ax[2].fill_between(ax2_plot.index, 0, ax2_plot, color='lightblue', alpha=1, zorder = 0)
-ax[2].set_ylim([0, ax2_plot.max()*1.1])
+ax[2].set_ylim([0, g_prices["SpotPriceDKK"].max()*1.1])
 ax[2].set_xticks(ax[0].get_xticks(minor=True), minor=True)
 ax[2].set_xticklabels(ax[0].get_xticklabels())
+ax[2].axhline(y=fixed_price, color="k", linestyle='--', lw = 1)
 
 # add space between subplots
 fig0.subplots_adjust(hspace=0.4)
@@ -202,7 +241,7 @@ fig0.subplots_adjust(hspace=0.4)
 ax[0].legend().set_visible(False)
 ax[0].set_title("Daglig Elproduktion i DK1 [GWh]")
 ax[1].set_title(r"Daglig CO$_2$ intensitet i DK1 [gCO$_2$/kWh]")
-ax[2].set_title("Daglig Spotpris + Nettarif i DK1 [DKK/kWh]")
+ax[2].set_title("Spotpris + Nettarif (ex. elafgift) i DK1 [DKK/kWh]")
 
 # Layout 
 for ax_i in ax:
@@ -226,7 +265,7 @@ fig0.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='righ
 fig0.savefig("figures/production_panelB.png", bbox_inches='tight')
 
 ########################################################################################
-################################## Panel B #############################################
+################################## Panel A #############################################
 ########################################################################################
 fig = plt.figure(figsize=(10*aspect_ratio,10))
 gs = fig.add_gridspec(3, 2, height_ratios=[1.4,
