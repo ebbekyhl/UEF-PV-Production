@@ -345,7 +345,9 @@ ax_n.set_title("Kumuleret produktion (MWh)")
 
 ax_i = fig.add_subplot(gs[1,:])
 ax_i.set_title("Daglig produktion (kWh)")
-df.plot(ax= ax_i, lw = 1, alpha=0.6, color = solar_color, label = "_nolegend_")
+df.plot(ax= ax_i, lw = 0, alpha=0.6, color = solar_color)
+ax_i.fill_between(df.index, 0, df["Produktion"], color=solar_color, alpha=0.3, zorder = 0)
+ax_i.set_ylim(0, ax_i.get_ylim()[1])
 
 # Layout 
 for ax in [ax_m, ax_n, ax_i]:
