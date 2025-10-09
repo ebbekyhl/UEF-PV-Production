@@ -106,9 +106,6 @@ def extract_month_name(year_month):
 def extract_year(year_month):
     return year_month.split("-")[0]
 
-with open("email_summary.txt", "w", newline="") as f:
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
-
 ########################################################################################
 ###################### Read data from other repo #######################################
 ########################################################################################
@@ -181,6 +178,9 @@ production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
 production_monthly_sum_cum = production_monthly_sum.cumsum()
 
 production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production values
+
+with open("email_summary.txt", "w", newline="") as f:
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
 
 ########################################################################################
 ########################### Read grid data #############################################
