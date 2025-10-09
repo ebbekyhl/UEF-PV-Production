@@ -485,8 +485,8 @@ with PdfPages("figures/UEF_rapport.pdf") as pdf:
         img = mpimg.imread(path)
         h, w = img.shape[:2]
 
-        # Create a figure sized to the image (1:1 at 100 dpi = w/100 by h/100 inches)
-        dpi = 100.0
+        # Create a figure sized to the image (1:1 at 200 dpi = w/200 by h/200 inches)
+        dpi = 200.0
         fig_PDF = plt.figure(figsize=(w/dpi, h/dpi), dpi=dpi)
         ax = plt.axes([0, 0, 1, 1])  # full-bleed
         ax.imshow(img)
