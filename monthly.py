@@ -5,9 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.image as mpimg
-import os
+import requests
 
-download_dir = download_dir = os.path.abspath("data")  # choose where to save data
+use_inverter_data = False # whether to use inverter data if available
+
+download_dir = os.path.abspath("data")  # choose where to save data
 
 month_mapping = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Maj",
                     6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Okt",
@@ -57,19 +59,20 @@ pvgis = {"Jan": 895.7,
         "Dec": 562.9}
 
 # For now, assume the following self-consumptions:
-self_consumption_ratio = pd.Series({"Jan": 0.85,
-                          "Feb": 0.85,
-                          "Mar": 0.85,
-                          "Apr": 0.85,
+self_consumption_ratio = pd.Series({"Jan": 1,
+                          "Feb": 0.95,
+                          "Mar": 0.9,
+                          "Apr": 0.88,
                             "Maj": 0.85,
                             "Jun": 0.85,
                             "Jul": 0.85,
-                            "Aug": 0.85,
-                            "Sep": 0.85,
-                            "Okt": 0.85,
-                            "Nov": 0.85,
-                            "Dec": 0.85
-                            })
+                            "Aug": 0.9,
+                            "Sep": 0.95,
+                            "Okt": 0.97,
+                            "Nov": 1,
+                            "Dec": 1
+                            } # read from plot by Parisa
+                            )
 
 # plotting configuration
 fs = 14
@@ -93,17 +96,6 @@ df["date"] = pd.to_datetime(df["date"])
 # set "date" as index
 df.set_index("date", inplace=True, drop=True)
 
-# df comes in daily values, here we convert it to monthly values
-production_monthly_sum = df.groupby(df.index.month).sum() # sum of production per month
-production_monthly_mean = df.groupby(df.index.month).mean() # mean of production per month
-
-production_monthly_sum.index = production_monthly_sum.index.map(month_mapping)
-production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
-
-production_monthly_sum_cum = production_monthly_sum.cumsum()
-
-production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production values
-
 def format_number(number):
     formatted_number = f"{number:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return formatted_number
@@ -116,6 +108,79 @@ def extract_year(year_month):
 
 with open("email_summary.txt", "w", newline="") as f:
     f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
+
+########################################################################################
+###################### Read data from other repo #######################################
+########################################################################################
+# For some months in the past, we have more detailed data from the GitHub repo:
+# https://github.com/martavp/UEF
+
+def get_values():
+
+    owner = "martavp"
+    repo = "UEF"
+    path = "data/inverter_monthly_datafiles"
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    response = requests.get(url)
+
+    files = response.json()
+
+    files_list = []
+    for file in files:
+        files_list.append(file["name"])
+
+    data_dir = "https://raw.githubusercontent.com/martavp/UEF/main/data/inverter_monthly_datafiles/"
+    # https://github.com/martavp/UEF/blob/main/data/inverter_monthly_datafiles/Inverter_2_2024_09.xlsx
+    # https://raw.githubusercontent.com/martavp/UEF/main/data/inverter_monthly_datafiles/Inverter_2_2024_09.xlsx
+    
+    df_daily_production_inv = {}
+    for file in files_list:
+        
+        inverter = file.split("_")[1]
+
+        df_inv = pd.read_excel(data_dir + file, skiprows=[0,1,2], header = 0)
+
+        df_inv["Start Time"] = df_inv["Start Time"].str.split(" ", expand=True)[0] + " " + df_inv["Start Time"].str.split(" ", expand=True)[1]
+        df_inv["time"] = pd.to_datetime(df_inv["Start Time"])
+        df_inv.set_index("time", inplace=True)
+
+        month = df_inv.index[0].month
+        year = df_inv.index[0].year
+
+        ym = f"{year}-{month:02d}"
+
+        df_hourly_production_inv = df_inv["Active power(kW)"].resample("h").mean()
+        df_daily_production_inv[(inverter, ym)] = df_hourly_production_inv.resample("d").sum()  
+
+    return df_daily_production_inv
+
+df_inv = get_values()
+
+df_inv_1 = pd.concat(df_inv).loc["1"].reset_index()
+df_inv_2 = pd.concat(df_inv).loc["2"].reset_index()
+df_inv_1.set_index("time", inplace=True)
+df_inv_2.set_index("time", inplace=True)
+common_index = df_inv_1.index.intersection(df_inv_2.index)
+df_inv_sum = df_inv_1.loc[common_index, "Active power(kW)"] + df_inv_2.loc[common_index, "Active power(kW)"]
+
+if use_inverter_data:
+    common_index2 = df.index.intersection(df_inv_sum.index)
+    df.loc[common_index2, "Produktion"] = df_inv_sum
+
+########################################################################################
+############################# Monthly values ###########################################
+########################################################################################
+# df comes in daily values, here we convert it to monthly values
+production_monthly_sum = df.groupby(df.index.month).sum() # sum of production per month
+production_monthly_mean = df.groupby(df.index.month).mean() # mean of production per month
+
+production_monthly_sum.index = production_monthly_sum.index.map(month_mapping)
+production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
+
+production_monthly_sum_cum = production_monthly_sum.cumsum()
+
+production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production values
 
 ########################################################################################
 ########################### Read grid data #############################################
@@ -199,6 +264,7 @@ shares = df_emissions_carrier.sum()/(df_emissions_carrier.sum().sum())*100
 
 df_emissions_carrier = df_emissions_carrier[shares[shares > 0.1].index]
 
+# plot area chart of daily production by carrier in GWh
 (df_emissions_carrier.resample("d").sum()/1e3).rename(columns=names).plot.area(stacked=True, 
                                                                                linewidth = 0, 
                                                                                color = [colors[col] for col in df_emissions_carrier.columns], ax=ax[0])
@@ -255,8 +321,9 @@ ax[2].annotate(f"{no_hours_above} timer over fast pris",
                ha='left',
                fontsize=fs,
                color= blue_color)
+
 ax[2].annotate("Negativ spotpris", 
-               xy=(pd.to_datetime("7/7/2025"), -0.55),
+               xy=(pd.to_datetime("7/1/2025"), -0.55),
                ha='left',
                fontsize=fs,
                color= red_color)
@@ -271,9 +338,9 @@ fig0.subplots_adjust(hspace=0.4)
 
 # remove legend 
 ax[0].legend().set_visible(False)
-ax[0].set_title("Daglig Elproduktion i DK1 [GWh]")
-ax[1].set_title(r"Daglig CO$_2$ intensitet i DK1 [gCO$_2$/kWh]")
-ax[2].set_title("Spotpris + Nettarif (ekskl. elafgift) i DK1 [DKK/kWh]")
+ax[0].set_title(r"$\mathbf{Daglig}$" + " " + r"$\mathbf{elproduktion}$" + " " + r"$\mathbf{i}$" + " " + r"$\mathbf{DK1}$" + " (GWh)", color = "gray") # CO2 udledninger undgået ved egenproduktion
+ax[1].set_title(r"$\mathbf{Daglig}$" + " " + r"$\mathbf{CO}_2$" + " " + r"$\mathbf{intensitet}$" + " (gCO$_2$/kWh)", color = "gray")
+ax[2].set_title(r"$\mathbf{Spotpris}$" + " + " + r"$\mathbf{nettarif}$" + " (ekskl. elafgift) (DKK/kWh)", color = "gray")
 
 # Layout 
 for ax_i in ax:
@@ -310,11 +377,11 @@ gs.update(hspace=0.4, wspace=0.15)
 
 # fig, axs = plt.subplots(1, 2, figsize=(14, 5))
 ax_m = fig.add_subplot(gs[0,0])
-ax_m.set_title("Månedlige produktionsværdier (MWh)")
+ax_m.set_title(r"$\mathbf{Månedlige}$" + " " + r"$\mathbf{produktionsværdier}$" + " (MWh)", color = "gray")
 
 # bar plot of monthly production
 (production_monthly_sum/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7)
-self_consumption = production_monthly_sum["Produktion " + year_months[-1][0:4]]*self_consumption_ratio.loc[production_monthly_sum.index]
+self_consumption = production_monthly_sum["Produktion 2025"]*self_consumption_ratio.loc[production_monthly_sum.index]
 (self_consumption/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.4, 
                             edgecolor="k", 
                             hatch="/",
@@ -324,29 +391,55 @@ self_consumption = production_monthly_sum["Produktion " + year_months[-1][0:4]]*
 (pd.Series(pvgis)/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
 
 ax_n = fig.add_subplot(gs[0,1])
-ax_n.set_title("Kumuleret produktion (MWh)")
+ax_n.set_title(r"$\mathbf{Kumuleret}$" + " " + r"$\mathbf{produktion}$" + " (MWh)", color = "gray")
 
 # add expected production from simulation
-(pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet produktion", ax=ax_n)
+(pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
 
 # cumulative sum of monthly production
 (production_monthly_sum_cum/1e3).plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10)
-(self_consumption.cumsum()/1e3).plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug " + year_months[-1][0:4])
+(self_consumption.cumsum()/1e3).plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug")
 
 # Daily production
 ax_i = fig.add_subplot(gs[1,:])
-ax_i.set_title("Daglig produktion (kWh)")
+ax_i.set_title(r"$\mathbf{Daglig}$" + " " + r"$\mathbf{produktion}$" + " (kWh)", color = "gray")
 df.plot(ax= ax_i, lw = 0, alpha=1, color = solar_color)
 ax_i.fill_between(df.index, 0, df["Produktion"], color=solar_color, alpha=0.3, zorder = 0)
 ax_i.set_ylim(0, ax_i.get_ylim()[1])
 
 # Avoided CO2 emissions
+capacity = 100 # kWp
+footprint = 385 # kg CO2 per kWp, from https://www.recgroup.com/sites/default/files/documents/wp_-_recs_class-leading_carbon_footprint.pdf?utm_source=chatgpt.com
+panel_footprint = capacity * footprint / 1000 # tCO2
+
 ax_k = fig.add_subplot(gs[2,:])
-ax_k.set_title(r"Kumuleret potentielt undgået CO$_2$ (tCO$_2$)") # CO2 udledninger undgået ved egenproduktion
+ax_k.set_title(r"$\mathbf{CO}_2$" + " " + r"$\mathbf{regnskab}$" + " (ton)", color = "gray") # CO2 udledninger undgået ved egenproduktion
 CO2_avoided = df_emissions_intensity * df["Produktion"]  
-(CO2_avoided.cumsum()/1e6).plot(ax=ax_k, color='green', lw=1, alpha=0.7, label="Undgået CO2")
-ax_k.fill_between(CO2_avoided.cumsum().index, 0, CO2_avoided.cumsum()/1e6, color='lightgreen', alpha=0.3, zorder = 0)
-ax_k.set_ylim(0, ax_k.get_ylim()[1])
+net_CO2 = panel_footprint - (CO2_avoided.cumsum()/1e6)
+
+remaining_emissions = net_CO2.dropna().iloc[-1]
+
+co2_avoided_sofar = (CO2_avoided.cumsum()/1e6).dropna().iloc[-1]
+no_days_produced = df.shape[0]
+
+co2_avoiding_rate = co2_avoided_sofar / no_days_produced
+no_days_remaining = remaining_emissions / co2_avoiding_rate
+
+end_date = df.index.max() + pd.Timedelta(days=no_days_remaining)
+
+net_CO2.plot(ax=ax_k, color='green', lw=1, alpha=0.7, label="Undgået CO2")
+ax_k.fill_between(net_CO2.index, 0, net_CO2, color='lightgreen', alpha=0.3, zorder = 0)
+
+ax_k.plot([df.index.max(), end_date], [net_CO2.dropna().iloc[-1], 0], color='green', lw=1, alpha=0.7, ls="--", label="Forventet udvikling")
+
+ax_k.set_ylim(0, net_CO2.max()*1.2)
+
+ax_k.text(pd.to_datetime("2025-01-10"), panel_footprint*1.05, "Fabrik", fontsize=fs, color="gray")
+ax_k.text(pd.to_datetime("2029-11-01"), 0, "Break-even", fontsize=fs, color="gray")
+ax_k.text(pd.to_datetime("2027-01-01"), 12, "Hvis samme udvikling fortsætter", fontsize=fs, color="green", rotation=-7, alpha =0.5)
+
+
+ax_k.set_xlim([df.index.min(), pd.to_datetime("2030-06-01")])
 
 # Layout 
 for ax in [ax_m, ax_n, ax_i, ax_k]:
@@ -358,7 +451,7 @@ for ax in [ax_m, ax_n, ax_i, ax_k]:
     ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha='center')
     ax.set_ylabel("")
     ax.set_xlabel("")
-    if ax != ax_m and ax != ax_n:
+    if ax != ax_m and ax != ax_n and ax != ax_k:
         ax.set_xlim([df.index.min(), df.index.max()])
 
 ax_m.legend().set_visible(False)
