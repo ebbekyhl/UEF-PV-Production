@@ -152,16 +152,16 @@ def get_values():
 
     return df_daily_production_inv
 
-df_inv = get_values()
-
-df_inv_1 = pd.concat(df_inv).loc["1"].reset_index()
-df_inv_2 = pd.concat(df_inv).loc["2"].reset_index()
-df_inv_1.set_index("time", inplace=True)
-df_inv_2.set_index("time", inplace=True)
-common_index = df_inv_1.index.intersection(df_inv_2.index)
-df_inv_sum = df_inv_1.loc[common_index, "Active power(kW)"] + df_inv_2.loc[common_index, "Active power(kW)"]
-
 if use_inverter_data:
+    df_inv = get_values()
+
+    df_inv_1 = pd.concat(df_inv).loc["1"].reset_index()
+    df_inv_2 = pd.concat(df_inv).loc["2"].reset_index()
+    df_inv_1.set_index("time", inplace=True)
+    df_inv_2.set_index("time", inplace=True)
+    common_index = df_inv_1.index.intersection(df_inv_2.index)
+    df_inv_sum = df_inv_1.loc[common_index, "Active power(kW)"] + df_inv_2.loc[common_index, "Active power(kW)"]
+
     common_index2 = df.index.intersection(df_inv_sum.index)
     df.loc[common_index2, "Produktion"] = df_inv_sum
 
