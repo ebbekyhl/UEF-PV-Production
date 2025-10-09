@@ -209,9 +209,39 @@ g_prices = pd.json_normalize(g_prices["records"])
 g_prices.index = pd.to_datetime(g_prices["HourDK"])
 g_prices["SpotPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
 
-net_tariffs = 7.63 + 9.25 + 22.60 # Transmissionsnettarif + Systemtarif + Nettarif (all in cents/kWh)
-# https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
-g_prices["ElPriceDKK"] = g_prices["SpotPriceDKK"] + net_tariffs / 100
+energinet_tariffs = (7.2 + 4.3)/100 # DKK/kWh, Energinets systemtarif + Nettarif # https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
+transport_tariffs_s_low = 12.2/100 # DKK/kWh https://elberegner.dk/guides/hvad-koster-transport-af-el/
+transport_tariffs_s_mid = 18.31/100 # DKK/kWh, https://elberegner.dk/guides/hvad-koster-transport-af-el/
+transport_tariffs_s_high = 47.60/100 # DKK/kWh, https://elberegner.dk/guides/hvad-koster-transport-af-el/
+transport_tariffs_w_low = 12.2/100 # DKK/kWh, https://elberegner.dk/guides/hvad-koster-transport-af-el/
+transport_tariffs_w_mid = 36.61/100 # DKK/kWh, https://elberegner.dk/guides/hvad-koster-transport-af-el/
+transport_tariffs_w_high = 109.85/100 # DKK/kWh, https://elberegner.dk/guides/hvad-koster-transport-af-el/
+
+spot_prices = pd.DataFrame(g_prices["SpotPriceDKK"]).sort_index()
+spot_prices["month"] = spot_prices.index.month
+spot_prices["season"] = np.where(spot_prices["month"].isin([10, 11, 12, 1, 2, 3]), "winter", "summer")
+# add low level between 00 and 06, mid level between 06 and 17, high level between 17 and 21, mid level between 21 and 24
+spot_prices["hour"] = spot_prices.index.hour
+spot_prices["level"] = np.where(spot_prices["hour"].between(0, 6), "low", 
+                                np.where(spot_prices["hour"].between(6, 17), "mid", 
+                                         np.where(spot_prices["hour"].between(17, 21), "high", "mid")))
+
+w_low_index = spot_prices.query("season == 'winter' & level == 'low'").index
+w_mid_index = spot_prices.query("season == 'winter' & level == 'mid'").index
+w_high_index = spot_prices.query("season == 'winter' & level == 'high'").index
+s_low_index = spot_prices.query("season == 'summer' & level == 'low'").index
+s_mid_index = spot_prices.query("season == 'summer' & level == 'mid'").index
+s_high_index = spot_prices.query("season == 'summer' & level == 'high'").index
+
+spot_prices.loc[w_low_index, "transport"] = transport_tariffs_w_low
+spot_prices.loc[w_mid_index, "transport"] = transport_tariffs_w_mid 
+spot_prices.loc[w_high_index, "transport"] = transport_tariffs_w_high
+spot_prices.loc[s_low_index, "transport"] = transport_tariffs_s_low
+spot_prices.loc[s_mid_index, "transport"] = transport_tariffs_s_mid
+spot_prices.loc[s_high_index, "transport"] = transport_tariffs_s_high
+
+# spot_prices["level"]
+g_prices["ElPriceDKK"] = spot_prices["SpotPriceDKK"] + spot_prices["transport"] + energinet_tariffs
 
 carriers = ['BioGas', 'Straw', 'Wood', 'FossilGas', 'Coal', 'Fossil Oil',
               'Waste', 'Hydro', 'Solar', 'WindOffshore', 'WindOnshore']
@@ -322,7 +352,7 @@ ax[2].annotate(f"{no_hours_above} timer over fast pris",
                fontsize=fs,
                color= blue_color)
 
-ax[2].annotate("Negativ spotpris", 
+ax[2].annotate("Negativ rå elpris", 
                xy=(pd.to_datetime("7/1/2025"), -0.55),
                ha='left',
                fontsize=fs,
@@ -483,11 +513,11 @@ pngs = ["figures/production_panelA.png",
 with PdfPages("figures/UEF_rapport.pdf") as pdf:
     for path in pngs:
         img = mpimg.imread(path)
-        h, w = img.shape[:2]
+        w,h = 3508, 2480 # A4 at 300dpi
+        dpi = 300
 
-        # Create a figure sized to the image (1:1 at 200 dpi = w/200 by h/200 inches)
-        dpi = 200.0
-        fig_PDF = plt.figure(figsize=(w/dpi, h/dpi), dpi=dpi)
+        # create a figure at the right size with the correct dpi
+        fig_PDF = plt.figure(figsize = (w/dpi, h/dpi), dpi = dpi)
         ax = plt.axes([0, 0, 1, 1])  # full-bleed
         ax.imshow(img)
         ax.axis("off")
