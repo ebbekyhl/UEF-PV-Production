@@ -1,0 +1,34 @@
+name: Daily Job
+
+on:
+  schedule:
+    - cron: '0 12 * * *' # Every day at noon UTC
+  workflow_dispatch:     # Allows manual run for testing
+
+permissions:
+  contents: write
+  
+jobs:
+  run-daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Run Python script
+        run: python daily.py
+
+      - name: Commit and push new files
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add data/*.csv figures/*.png || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Added updated production data"
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            git push origin HEAD:main
+          fi
