@@ -1,10 +1,8 @@
-import download
 import os
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
-download_dir = download_dir = os.path.abspath("data")  # choose where to save data
+download_dir = os.path.abspath("data")  # choose where to save data
 
 month_mapping = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Maj",
                     6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Okt",
@@ -30,17 +28,6 @@ if year_earliest < year_today:
     years = np.arange(year_earliest, year_today)
     for year in years:
         year_months += [f"{year}-{month:02d}" for month in np.arange(1, 13)]
-
-# list the files that are already downloaded 
-existing_files = os.listdir(download_dir)
-
-# missing files 
-year_months_downloads = [ym for ym in year_months if f"PV_production_Aarhus_{ym}.csv" not in existing_files]
-
-print(year_months_downloads)
-
-for year_month_download in year_months_downloads:
-    download.download_pv_data(year_month_download,download_dir)
 
 # read data for every months contained in "year_months"
 df = pd.concat([pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv", sep=";") for month in year_months])

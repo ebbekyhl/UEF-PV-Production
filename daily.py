@@ -7,7 +7,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.image as mpimg
 import requests
 
-use_inverter_data = False # whether to use inverter data if available
+use_inverter_data = True # whether to use inverter data if available
 
 download_dir = os.path.abspath("data")  # choose where to save data
 
@@ -90,16 +90,6 @@ plt.rcParams['axes.axisbelow'] = True
 plt.rcParams['legend.title_fontsize'] = fs+3
 plt.rcParams['legend.fontsize'] = fs
 
-# read data for every months contained in "year_months"
-df = pd.concat([pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv", sep=";") for month in year_months])
-df.rename(columns={"Ep":"Produktion"}, inplace=True)
-
-# convert "date" into pd.datetime
-df["date"] = pd.to_datetime(df["date"])
-
-# set "date" as index
-df.set_index("date", inplace=True, drop=True)
-
 def format_number(number):
     formatted_number = f"{number:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return formatted_number
@@ -109,12 +99,6 @@ def extract_month_name(year_month):
 
 def extract_year(year_month):
     return year_month.split("-")[0]
-
-########################################################################################
-###################### Read data from other repo #######################################
-########################################################################################
-# For some months in the past, we have more detailed data from the GitHub repo:
-# https://github.com/martavp/UEF
 
 def get_values():
 
@@ -135,9 +119,21 @@ def get_values():
     # https://github.com/martavp/UEF/blob/main/data/inverter_monthly_datafiles/Inverter_2_2024_09.xlsx
     # https://raw.githubusercontent.com/martavp/UEF/main/data/inverter_monthly_datafiles/Inverter_2_2024_09.xlsx
     
+    existing_files = [f"data/inverter_data/{f}" for f in os.listdir("data/inverter_data/") if f.endswith(".csv")]
+
     df_daily_production_inv = {}
     for file in files_list:
-        
+
+        # check if file exists in data already - if so, read it
+        if f"data/inverter_data/{file}.csv" in existing_files:
+            df_inv = pd.read_csv(f"data/inverter_data/{file}.csv", index_col=0, parse_dates=True)
+            inverter = file.split("_")[1]
+            month = df_inv.index[0].month
+            year = df_inv.index[0].year
+            ym = f"{year}-{month:02d}"
+            df_daily_production_inv[(inverter, ym)] = df_inv
+            continue
+
         inverter = file.split("_")[1]
 
         df_inv = pd.read_excel(data_dir + file, skiprows=[0,1,2], header = 0)
@@ -152,13 +148,38 @@ def get_values():
         ym = f"{year}-{month:02d}"
 
         df_hourly_production_inv = df_inv["Active power(kW)"].resample("h").mean()
-        df_daily_production_inv[(inverter, ym)] = df_hourly_production_inv.resample("d").sum()  
+
+        save_data = df_hourly_production_inv.resample("d").sum()  
+
+        save_data.to_csv(f"data/inverter_data/{file}.csv")
+
+        df_daily_production_inv[(inverter, ym)] = save_data
 
     return df_daily_production_inv
 
+# read data for every months contained in "year_months"
+df = pd.concat([pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv", sep=";") for month in year_months])
+df.rename(columns={"Ep":"Produktion"}, inplace=True)
+# convert "date" into pd.datetime
+df["date"] = pd.to_datetime(df["date"])
+
+# set "date" as index
+df.set_index("date", inplace=True, drop=True)
+
+# make a copy of df
+df_copy = df.copy()
+
+###########################################################################################
+############################ Inverter data replacement ####################################
+###########################################################################################
+# some reported values at the AURORA dashboard might be incorrect, so we replace these data 
+# points with more accurate inverter data from the GitHub repo: https://github.com/martavp/UEF
+
 if use_inverter_data:
+    # download data from GitHub repository
     df_inv = get_values()
 
+    # set index and sum the two inverters
     df_inv_1 = pd.concat(df_inv).loc["1"].reset_index()
     df_inv_2 = pd.concat(df_inv).loc["2"].reset_index()
     df_inv_1.set_index("time", inplace=True)
@@ -166,8 +187,21 @@ if use_inverter_data:
     common_index = df_inv_1.index.intersection(df_inv_2.index)
     df_inv_sum = df_inv_1.loc[common_index, "Active power(kW)"] + df_inv_2.loc[common_index, "Active power(kW)"]
 
-    common_index2 = df.index.intersection(df_inv_sum.index)
-    df.loc[common_index2, "Produktion"] = df_inv_sum
+    # create dataframe with inverter data where available, NaN elsewhere
+    df_copy["Replaced"] = False
+    common_index2 = df_copy.index.intersection(df_inv_sum.index)
+    df_copy.loc[common_index2, "Produktion"] = df_inv_sum
+    df_copy.loc[common_index2, "Replaced"] = True
+    df_inverter_data_index = df_copy.query("Replaced == True")["Produktion"].index
+    df_non_inverter_data_index = df_copy.drop(df_inverter_data_index).index
+    df_inverter_data = df_copy["Produktion"].copy()
+    df_inverter_data.loc[df_non_inverter_data_index] = np.nan
+
+    # swap values where inverter data is larger than the original data
+    df_final = df["Produktion"].copy()
+    swap_index = df_inverter_data.index[df_inverter_data > df.loc[df_inverter_data.index, "Produktion"]]
+    df_final.loc[swap_index] = df_inverter_data.loc[swap_index]
+    df["Produktion"] = df_final
 
 ########################################################################################
 ############################# Monthly values ###########################################
@@ -191,7 +225,7 @@ with open("email_summary.txt", "w", newline="") as f:
 ########################################################################################
 start = '2025-01-01'
 today = pd.Timestamp.now()
-end = str(today.year) + "-" + str(today.month).zfill(2) + "-" + (str(today.day - 6).zfill(2))
+end = str(today.year) + "-" + str(today.month).zfill(2) + "-" + (str(today.day).zfill(2))
 url_emissions = f'https://api.energidataservice.dk/dataset/DeclarationProduction?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
 url_prices = f'https://api.energidataservice.dk/dataset/Elspotprices?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
 

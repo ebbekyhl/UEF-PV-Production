@@ -2,7 +2,7 @@ name: Quarterly Job
 
 on:
   schedule:
-    - cron: '0 0 6 1,4,7,10 *'  # Sixth day of every quarter at midnight UTC
+    - cron: '0 12 6 1,4,7,10 *'  # Sixth day of every quarter at noon UTC
   workflow_dispatch:     # Allows manual run for testing
 
 permissions:
