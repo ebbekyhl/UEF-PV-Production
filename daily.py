@@ -562,11 +562,12 @@ df_inv_1 = pd.concat(df_hourly_production_inv).loc["1"].reset_index()
 df_inv_2 = pd.concat(df_hourly_production_inv).loc["2"].reset_index()
 df_inv_1.set_index("time", inplace=True)
 df_inv_2.set_index("time", inplace=True)
-common_index = df_inv_1.index.intersection(df_inv_2.index)
-df_inv_sum = df_inv_1.loc[common_index, "Active power(kW)"] + df_inv_2.loc[common_index, "Active power(kW)"]
 
 # only include data from 1st January 2025
-df_inv_sum = df_inv_sum.loc["2025-01-01":]
+df_inv_1 = df_inv_1.sort_index().loc["2025-01-01":]
+df_inv_2 = df_inv_2.sort_index().loc["2025-01-01":] 
+common_index = df_inv_1.index.intersection(df_inv_2.index)
+df_inv_sum = df_inv_1.loc[common_index, "Active power(kW)"] + df_inv_2.loc[common_index, "Active power(kW)"]
 
 def calculate_pivot(df_inv_sum):
     df_hourly = df_inv_sum.copy()
