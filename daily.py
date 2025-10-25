@@ -126,7 +126,8 @@ def get_values():
 
         # check if file exists in data already - if so, read it
         if f"data/inverter_data/{file}.csv" in existing_files:
-            df_inv = pd.read_csv(f"data/inverter_data/{file}.csv", index_col=0, parse_dates=True)
+            df_inv_hourly = pd.read_csv(f"data/inverter_data/{file}.csv", index_col=0, parse_dates=True)
+            df_inv = df_inv_hourly.resample("d").sum() 
             inverter = file.split("_")[1]
             month = df_inv.index[0].month
             year = df_inv.index[0].year
@@ -149,11 +150,9 @@ def get_values():
 
         df_hourly_production_inv = df_inv["Active power(kW)"].resample("h").mean()
 
-        save_data = df_hourly_production_inv.resample("d").sum()  
+        df_hourly_production_inv.to_csv(f"data/inverter_data/{file}.csv")
 
-        save_data.to_csv(f"data/inverter_data/{file}.csv")
-
-        df_daily_production_inv[(inverter, ym)] = save_data
+        df_daily_production_inv[(inverter, ym)] = df_hourly_production_inv.resample("d").sum() 
 
     return df_daily_production_inv
 
