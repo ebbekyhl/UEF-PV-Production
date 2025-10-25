@@ -150,6 +150,8 @@ def get_values():
 
         df_hourly_production_inv = df_inv["Active power(kW)"].resample("h").mean()
 
+        # Saving file 
+        print(f"Saving inverter data for inverter {inverter} for {ym}:")
         df_hourly_production_inv.to_csv(f"data/inverter_data/{file}.csv")
 
         df_daily_production_inv[(inverter, ym)] = df_hourly_production_inv.resample("d").sum() 
