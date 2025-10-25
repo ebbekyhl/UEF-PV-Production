@@ -118,10 +118,6 @@ def get_values():
     data_dir = "https://raw.githubusercontent.com/martavp/UEF/main/data/inverter_monthly_datafiles/"
     # https://github.com/martavp/UEF/blob/main/data/inverter_monthly_datafiles/Inverter_2_2024_09.xlsx
     # https://raw.githubusercontent.com/martavp/UEF/main/data/inverter_monthly_datafiles/Inverter_2_2024_09.xlsx
-    
-    # check if "inverter_data" folder exists, if not create it
-    if not os.path.exists("data/inverter_data/"):
-        os.makedirs("data/inverter_data/")
 
     existing_files = [f"data/inverter_data/{f}" for f in os.listdir("data/inverter_data/") if f.endswith(".csv")]
 
