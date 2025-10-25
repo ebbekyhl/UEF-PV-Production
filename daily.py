@@ -212,7 +212,7 @@ production_monthly_sum = df.groupby(df.index.month).sum() # sum of production pe
 production_monthly_mean = df.groupby(df.index.month).mean() # mean of production per month
 
 production_monthly_sum.index = production_monthly_sum.index.map(month_mapping)
-production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
+# production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
 
 production_monthly_sum_cum = production_monthly_sum.cumsum()
 
@@ -319,10 +319,10 @@ names = {'BioGas': "Biogas",
           'WindOnshore': "Landvind"}
 
 ########################################################################################
-################################## Panel B #############################################
+################################## Panel 3 #############################################
 ########################################################################################
 
-solar_color = "#f9a202"
+solar_color = "#f9c302" 
 blue_color = "#1f77b4"
 red_color = "#b93020"
 
@@ -430,10 +430,10 @@ fig0.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.91, 0.88), loc='upper
 # add copyright on bottom right of the figure
 fig0.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
 # savefig
-fig0.savefig("figures/production_panelB.png", bbox_inches='tight')
+fig0.savefig("figures/production_panel_3.png", bbox_inches='tight')
 
 ########################################################################################
-################################## Panel A #############################################
+################################## Panel 2 #############################################
 ########################################################################################
 fig = plt.figure(figsize=(10*aspect_ratio,10))
 gs = fig.add_gridspec(3, 2, height_ratios=[1.4,
@@ -449,8 +449,8 @@ ax_m = fig.add_subplot(gs[0,0])
 ax_m.set_title(r"$\mathbf{Månedlige}$" + " " + r"$\mathbf{produktionsværdier}$" + " (MWh)", color = "gray")
 
 # bar plot of monthly production
-(production_monthly_sum/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7)
-self_consumption = production_monthly_sum["Produktion 2025"]*self_consumption_ratio.loc[production_monthly_sum.index]
+(production_monthly_sum/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7, label = "Produktion")
+self_consumption = production_monthly_sum["Produktion"]*self_consumption_ratio.loc[production_monthly_sum.index]
 (self_consumption/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.4, 
                             edgecolor="k", 
                             hatch="/",
@@ -466,8 +466,8 @@ ax_n.set_title(r"$\mathbf{Kumuleret}$" + " " + r"$\mathbf{produktion}$" + " (MWh
 (pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index[0:-1]].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
 
 # cumulative sum of monthly production
-(production_monthly_sum_cum/1e3).plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10)
-(self_consumption.cumsum()/1e3).plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug")
+(production_monthly_sum_cum/1e3).plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10, label = "Produktion 2025")
+(self_consumption.cumsum()/1e3).plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug 2025")
 
 # Daily production
 ax_i = fig.add_subplot(gs[1,:])
@@ -540,13 +540,280 @@ ax_m.legend(handles[-3:], labels[-3:],
 
 # add copyright on bottom right of the figure
 fig.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
-fig.savefig("figures/production_panelA.png", bbox_inches='tight')
+fig.savefig("figures/production_panel_2.png", bbox_inches='tight')
+
+########################################################################################
+############################# Panel 1 ##################################################
+########################################################################################
+files = os.listdir("data/inverter_data/")
+files_list = [f for f in files if f.endswith(".csv")]
+
+df_hourly_production_inv = {}
+for file in files_list:
+    df_inv_hourly = pd.read_csv(f"data/inverter_data/{file}", index_col=0, parse_dates=True)
+    inverter = file.split("_")[1]
+    month = df_inv_hourly.index[0].month
+    year = df_inv_hourly.index[0].year
+    ym = f"{year}-{month:02d}"
+    df_hourly_production_inv[(inverter, ym)] = df_inv_hourly
+
+# set index and sum the two inverters
+df_inv_1 = pd.concat(df_hourly_production_inv).loc["1"].reset_index()
+df_inv_2 = pd.concat(df_hourly_production_inv).loc["2"].reset_index()
+df_inv_1.set_index("time", inplace=True)
+df_inv_2.set_index("time", inplace=True)
+common_index = df_inv_1.index.intersection(df_inv_2.index)
+df_inv_sum = df_inv_1.loc[common_index, "Active power(kW)"] + df_inv_2.loc[common_index, "Active power(kW)"]
+
+# only include data from 1st January 2025
+df_inv_sum = df_inv_sum.loc["2025-01-01":]
+
+def calculate_pivot(df_inv_sum):
+    df_hourly = df_inv_sum.copy()
+    df_hourly = df_hourly.to_frame()  # convert Series to DataFrame
+    df_hourly['date'] = df_hourly.index.date
+    df_hourly['hour'] = df_hourly.index.hour - 1
+    df_pivot = df_hourly.pivot_table(values='Active power(kW)', index='hour', columns='date')
+    df_pivot = df_pivot.reindex(range(24)).fillna(0)
+
+    df_pivot_min = df_pivot.min(axis=1)
+    df_pivot_max = df_pivot.max(axis=1)
+    df_pivot_q10 = df_pivot.quantile(0.10, axis=1)
+    df_pivot_q25 = df_pivot.quantile(0.25, axis=1)
+    df_pivot_q40 = df_pivot.quantile(0.40, axis=1)
+    df_pivot_q50 = df_pivot.quantile(0.5, axis=1)
+    df_pivot_q60 = df_pivot.quantile(0.6, axis=1)
+    df_pivot_q75 = df_pivot.quantile(0.75, axis=1)
+    df_pivot_q90 = df_pivot.quantile(0.90, axis=1)
+
+    df_pivot_winter = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([12,1,2])]
+    df_pivot_summer = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([6,7,8])]
+    df_pivot_spring = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([3,4,5])]
+    df_pivot_autumn = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([9,10,11])]
+
+    df_pivot_winter_mean = df_pivot_winter.mean(axis=1)
+    df_pivot_summer_mean = df_pivot_summer.mean(axis=1)
+    df_pivot_spring_mean = df_pivot_spring.mean(axis=1)
+    df_pivot_autumn_mean = df_pivot_autumn.mean(axis=1)
+
+    return (df_pivot, df_pivot_min, df_pivot_max, df_pivot_q10, df_pivot_q25, df_pivot_q40,
+            df_pivot_q50, df_pivot_q60, df_pivot_q75, df_pivot_q90,
+            df_pivot_winter, df_pivot_summer, df_pivot_spring, df_pivot_autumn,
+            df_pivot_winter_mean, df_pivot_summer_mean,
+            df_pivot_spring_mean, df_pivot_autumn_mean)
+
+# for inverters aggregated
+(df_pivot, df_pivot_min, df_pivot_max, df_pivot_q10, df_pivot_q25, df_pivot_q40,
+            df_pivot_q50, df_pivot_q60, df_pivot_q75, df_pivot_q90,
+            df_pivot_winter, df_pivot_summer, df_pivot_spring, df_pivot_autumn,
+            df_pivot_winter_mean, df_pivot_summer_mean,
+            df_pivot_spring_mean, df_pivot_autumn_mean) = calculate_pivot(df_inv_sum)
+
+# for inverter 1
+(df_pivot_1, df_pivot_min_1, df_pivot_max_1, df_pivot_q10_1, df_pivot_q25_1, df_pivot_q40_1,
+            df_pivot_q50_1, df_pivot_q60_1, df_pivot_q75_1, df_pivot_q90_1,
+            df_pivot_winter_1, df_pivot_summer_1, df_pivot_spring_1, df_pivot_autumn_1,
+            df_pivot_winter_mean_1, df_pivot_summer_mean_1,
+            df_pivot_spring_mean_1, df_pivot_autumn_mean_1) = calculate_pivot(df_inv_1["Active power(kW)"])
+
+# for inverter 2
+(df_pivot_2, df_pivot_min_2, df_pivot_max_2, df_pivot_q10_2, df_pivot_q25_2, df_pivot_q40_2,
+            df_pivot_q50_2, df_pivot_q60_2, df_pivot_q75_2, df_pivot_q90_2,
+            df_pivot_winter_2, df_pivot_summer_2, df_pivot_spring_2, df_pivot_autumn_2,
+            df_pivot_winter_mean_2, df_pivot_summer_mean_2,
+            df_pivot_spring_mean_2, df_pivot_autumn_mean_2) = calculate_pivot(df_inv_2["Active power(kW)"])
+
+def plot_daily_profile(ax,
+                       df_pivot,
+                       df_pivot_min,
+                       df_pivot_max,
+                       df_pivot_q10,
+                       df_pivot_q25,
+                       df_pivot_q40,
+                       df_pivot_q50,
+                       df_pivot_q60,
+                       df_pivot_q75,
+                       df_pivot_q90,
+                       df_pivot_winter,
+                         df_pivot_summer,
+                           df_pivot_spring,
+                               df_pivot_autumn,
+                         df_pivot_winter_mean,
+                           df_pivot_summer_mean,
+                             df_pivot_spring_mean,
+                               df_pivot_autumn_mean,
+                        name = "", 
+                       ):
+
+   ax.fill_between(df_pivot.index, df_pivot_q10, df_pivot_q90, color=solar_color, alpha=0.2, label="10-90 percentil", lw = 0)
+   ax.fill_between(df_pivot.index, df_pivot_q25, df_pivot_q75, color=solar_color, alpha=0.4, label="25-75 percentil", lw = 0)
+   ax.fill_between(df_pivot.index, df_pivot_q40, df_pivot_q60, color=solar_color, alpha=0.6, label="40-60 percentil", lw = 0)
+   
+   lws = {"": 2,
+          "Inverter 1": 1,
+          "Inverter 2": 1}
+   df_pivot_max.plot(color="gray", legend=False, alpha = 1, ax=ax, lw=lws[name], label="Max", ls = ":")
+   df_pivot_q50.plot(color="gray", legend=False, alpha = 1, ax=ax, lw=lws[name], label="Median", ls = "--")
+
+   seasons = {
+               # "vinter": df_pivot_winter, 
+         #    "forår": df_pivot_spring, 
+            "sommer": df_pivot_summer, 
+         #    "efterår": df_pivot_autumn
+            }
+
+   seasons_mean = {
+               # "vinter": df_pivot_winter_mean, 
+         #    "forår": df_pivot_spring_mean, 
+            "sommer": df_pivot_summer_mean, 
+         #    "efterår": df_pivot_autumn_mean
+            }
+
+   season_colors = {
+      "vinter": "#606a71",
+      "forår": "#b7ff0e",
+      "sommer": "#ffbf00",
+      "efterår": "#7b3c3c"
+   }
+   # for season_name, season in seasons.items():
+   #     # season.plot(ax=ax, lw=0.5, label = f"Gennemsnitlig {season_name}dag", color=season_colors[season_name], alpha = 0.5)
+   #     seasons_mean[season_name].plot(ax=ax, lw=3, label = f"Gennemsnitlig {season_name}dag", color=season_colors[season_name])
+
+   # plot last day in dataset
+   days_back = 1
+   df_pivot.iloc[:, -days_back].plot(ax=ax, lw=1, ls="--", color="orange", label="Seneste dag\n(" + str(df_pivot.columns[-days_back]) + ")")
+
+   if name == "":
+      ax.set_title(r"$\mathbf{Intradag}$" + " " + r"$\mathbf{effektkurve}$" + " " + name +  " (kW)", color = "gray")
+   else: 
+      ax.set_title(name +  " (kW)", color = "gray", fontsize = 14)
+
+   # Layout 
+   ax.spines['top'].set_visible(False)
+   ax.spines['right'].set_visible(False)
+   ax.grid(lw = 0.5, ls='--', color='gray', alpha=0.7)
+   ax.legend(loc = "best", prop = {'size': fs-2})
+   ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha='center')
+   ax.set_ylabel("")
+   ax.set_xlabel("")
+
+   ax.set_xticks(np.arange(0, 24, 1))
+
+   # get xticks 
+   xticks = ax.get_xticks()
+   ax.set_xticklabels([f"{i}:00" for i in range(len(xticks))], rotation=45)
+
+   # if inverter 1 or inverter 2, then only show every third xtick label
+   if name in ["Inverter 1", "Inverter 2"]:
+      ax.set_xticklabels([f"{i}:00" if i % 3 == 0 else "" for i in range(len(xticks))], rotation=30, fontsize = fs - 2)
+
+   ax.legend().set_visible(False)
+
+   if name != "":
+      ax.set_ylim(0, 35)
+
+   if name == "":
+      # add hatch to legend in ax_m
+      handles, labels = ax.get_legend_handles_labels()
+
+      ax.legend(handles, labels, 
+                  bbox_to_anchor=(0.02, 0.98), 
+                  loc='upper left', 
+                  borderaxespad=0., 
+                  prop = {'size': fs-2})
+      
+      ax.set_xlim(0, 23)
+
+fig_hourly = plt.figure(figsize=(14, 6))
+gs = fig_hourly.add_gridspec(2, 2, height_ratios=[1,
+                                           1,
+                                           ], width_ratios=[1.5,
+                                                          0.8,
+                                                          ]) 
+
+# add space between subfigures
+gs.update(hspace=0.4, wspace=0.15)
+
+# fig, axs = plt.subplots(1, 2, figsize=(14, 5))
+ax_1 = fig_hourly.add_subplot(gs[0:2,0:1])
+ax_2 = fig_hourly.add_subplot(gs[0,1])
+ax_3 = fig_hourly.add_subplot(gs[1,1])
+
+plot_daily_profile(ax_1,
+                    df_pivot,
+                  df_pivot_min,
+                  df_pivot_max,
+                  df_pivot_q10,
+                  df_pivot_q25,
+                  df_pivot_q40,
+                  df_pivot_q50,
+                  df_pivot_q60,
+                  df_pivot_q75,
+                  df_pivot_q90,
+                  df_pivot_winter,
+                    df_pivot_summer,
+                      df_pivot_spring,
+                          df_pivot_autumn,
+                    df_pivot_winter_mean,
+                      df_pivot_summer_mean,
+                        df_pivot_spring_mean,
+                          df_pivot_autumn_mean
+                  )
+
+plot_daily_profile(ax_2,
+                       df_pivot_1,
+                       df_pivot_min_1,
+                          df_pivot_max_1,
+                          df_pivot_q10_1,
+                            df_pivot_q25_1,
+                            df_pivot_q40_1,
+                              df_pivot_q50_1,
+                                df_pivot_q60_1,
+                                  df_pivot_q75_1,
+                                    df_pivot_q90_1,
+                            df_pivot_winter_1,
+                              df_pivot_summer_1,
+                                df_pivot_spring_1,
+                                  df_pivot_autumn_1,
+                            df_pivot_winter_mean_1,
+                              df_pivot_summer_mean_1,
+                                df_pivot_spring_mean_1,
+                                  df_pivot_autumn_mean_1,
+                                  name = "Inverter 1"
+                          )
+
+plot_daily_profile(ax_3,
+                       df_pivot_2,
+                       df_pivot_min_2,
+                            df_pivot_max_2,
+                            df_pivot_q10_2,
+                                df_pivot_q25_2,
+                                df_pivot_q40_2,
+                                df_pivot_q50_2,
+                                    df_pivot_q60_2,
+                                    df_pivot_q75_2,
+                                        df_pivot_q90_2,
+                                df_pivot_winter_2,
+                                df_pivot_summer_2,
+                                    df_pivot_spring_2,
+                                    df_pivot_autumn_2,
+                                df_pivot_winter_mean_2,
+                                df_pivot_summer_mean_2,
+                                    df_pivot_spring_mean_2,
+                                    df_pivot_autumn_mean_2,
+                                    name = "Inverter 2"
+                            )
+
+fig_hourly.text(0.42, -0.05, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+fig_hourly.savefig("figures/production_panel_1.png", bbox_inches='tight')
 
 ########################################################################################
 ############################# Save panel A and B #######################################
 ########################################################################################
-pngs = ["figures/production_panelA.png", 
-        "figures/production_panelB.png"]
+pngs = ["figures/production_panel_1.png",
+        "figures/production_panel_2.png", 
+        "figures/production_panel_3.png",
+        ]
 
 # --- Make a PDF with those PNGs as pages ---
 with PdfPages("figures/UEF_rapport.pdf") as pdf:
@@ -599,7 +866,7 @@ df.plot(ax= ax_i, lw = 0, alpha=0.6, color = solar_color)
 ax_i.fill_between(df.index, 0, df["Produktion"], color=solar_color, alpha=0.3, zorder = 0)
 ax_i.set_ylim(0, ax_i.get_ylim()[1])
 
-# Layout 
+# Layout
 for ax in [ax_m, ax_n, ax_i]:
     # hide upper and right spines
     ax.spines['top'].set_visible(False)
