@@ -1,16 +1,20 @@
 # UEF-PV-Production
 
-This repository uses GitHub Actions to create monthly or quarterly reports of the production from the [UEF](https://www.uef.dk/home) solar PV installation. 
+This repository uses GitHub Actions to create daily updates on the energy yield from the [UEF](https://www.uef.dk/home) solar PV installation in Aarhus, Denmark.
 
-It acquires data from the [AURORA dashboard](https://dashboard.aurora-h2020.eu/en-GB/pv-data?site=DK01&month=2025-06) and saves it in the `data/` folder.
+It currently acquires data from the following sources:
+- Reported energy yield from [AURORA dashboard](https://dashboard.aurora-h2020.eu/en-GB/pv-data?site=DK01&month=2025-06)
+- Inverter data from [martavp/UEF](https://github.com/martavp/UEF)
+- Electricity prices from [Energi Data Service](https://www.energidataservice.dk/)
+- Grid CO2 intensity from [Energi Data Service](https://www.energidataservice.dk/)
 
-Graphs summarizing the production within the past months (with daily and monthly resolution, respectively) are saved in the `figures/` folder.
+The energy yields are compared with simulated estimates from [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/). 
 
-We compare production data with estimated values from [PVGIS](https://re.jrc.ec.europa.eu/pvg_tools/en/). 
+The workflow includes a CO2 accounting that balances the emissions from manufacturing the panels with the avoided emissions from providing CO2-free electricity to the consumer. Here, avoided emissions are calculated based on the CO2-intensity of the electricity that would otherwise have been imported from the local grid. 
 
-The created figure is attached to an automatically generated email and shared with recipients listed in the secret variable "EMAIL_TO".
+The GitHub action workflow includes an email sent to recipients listed in the secret variable "EMAIL_TO" with the created figures attached to.
 
-The workflow is run once every month (currently set to run on the 5th, to account for delays in the data reporting on the AURORA dashboard) or quarterly.
+Data is updated daily, while emails are sent either monthly or quarterly.
 
 ![UEF PV installation production data](/figures/production_panel_1.png)
 
