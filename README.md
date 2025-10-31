@@ -1,6 +1,6 @@
 # UEF-PV-Production
 
-This repository uses GitHub Actions to create daily updates on the energy yield from the [UEF](https://www.uef.dk/home) solar PV installation in Aarhus, Denmark.
+This repository uses GitHub Actions to create daily updates on the energy yield from the [UEF](https://www.uef.dk/home) solar PV installation in Aarhus, Denmark. This summary is also provided as a [website](https://ebbekyhl.github.io/UEF-PV-Production/) using Github Pages.
 
 It currently acquires data from the following sources:
 - Reported energy yield from [AURORA dashboard](https://dashboard.aurora-h2020.eu/en-GB/pv-data?site=DK01&month=2025-06)
