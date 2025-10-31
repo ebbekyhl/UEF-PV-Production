@@ -1,5 +1,5 @@
 title: UEF PV Production
-description: Auto-updated panels
+description: A summary of how the UEF solar panels, installed in Aarhus (Denmark), have performed.
 url: "https://ebbekyhl.github.io"
 baseurl: "/UEF-PV-Production"   # project site path
-theme: jekyll-theme-midnight      # or use the “Change theme” button
+theme: jekyll-theme-cayman      # or use the “Change theme” button
