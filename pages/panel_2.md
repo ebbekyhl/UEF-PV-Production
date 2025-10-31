@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Panel 2: Overblik over produktion og CO2 aftryk"
+title: "Panel 2: Energy yield and CO2 footprint
 permalink: /panel-2/
 ---
 
