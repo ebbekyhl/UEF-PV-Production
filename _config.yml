@@ -2,4 +2,4 @@ title: UEF PV Production
 description: Auto-updated panels
 url: "https://ebbekyhl.github.io"
 baseurl: "/UEF-PV-Production"   # project site path
-theme: jekyll-theme-cayman      # or use the “Change theme” button
+theme: jekyll-theme-midnight      # or use the “Change theme” button
