@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Panel 3: Oplysninger om det lokale elnet"
+title: "Panel 3: Information on the local grid"
 permalink: /panel-3/
 ---
 
