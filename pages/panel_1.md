@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Panel 1: Intradag effektkurve
+title: "Panel 1: Intradag effektkurve"
 permalink: /panel-1/
 ---
 

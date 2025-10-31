@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Panel 2: Intradag effektkurve
+title: "Panel 2: Overblik over produktion og CO2 aftryk"
 permalink: /panel-2/
 ---
 

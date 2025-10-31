@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Panel 3: Intradag effektkurve
+title: "Panel 3: Oplysninger om det lokale elnet"
 permalink: /panel-3/
 ---
 
