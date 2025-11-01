@@ -346,6 +346,86 @@ names = {'BioGas': "Biogas",
           'WindOffshore': "Havvind",
           'WindOnshore': "Landvind"}
 
+# Read inverter data
+files = os.listdir("data/inverter_data/")
+files_list = [f for f in files if f.endswith(".csv")]
+
+df_hourly_production_inv = {}
+for file in files_list:
+    df_inv_hourly = pd.read_csv(f"data/inverter_data/{file}", index_col=0, parse_dates=True)
+    inverter = file.split("_")[1]
+    month = df_inv_hourly.index[0].month
+    year = df_inv_hourly.index[0].year
+    ym = f"{year}-{month:02d}"
+    df_hourly_production_inv[(inverter, ym)] = df_inv_hourly
+
+# set index and sum the two inverters
+df_inv_1 = pd.concat(df_hourly_production_inv).loc["1"].reset_index()
+df_inv_2 = pd.concat(df_hourly_production_inv).loc["2"].reset_index()
+df_inv_1.set_index("time", inplace=True)
+df_inv_2.set_index("time", inplace=True)
+
+# only include data from 1st January 2025
+df_inv_1 = df_inv_1.sort_index().loc["2025-01-01":]
+df_inv_2 = df_inv_2.sort_index().loc["2025-01-01":] 
+common_index = df_inv_1.index.intersection(df_inv_2.index)
+df_inv_sum = df_inv_1.loc[common_index, "Active power(kW)"] + df_inv_2.loc[common_index, "Active power(kW)"]
+
+def calculate_pivot(df_inv_sum):
+    df_hourly = df_inv_sum.copy()
+    df_hourly = df_hourly.to_frame()  # convert Series to DataFrame
+    df_hourly['date'] = df_hourly.index.date
+    df_hourly['hour'] = df_hourly.index.hour - 1
+    df_pivot = df_hourly.pivot_table(values='Active power(kW)', index='hour', columns='date')
+    df_pivot = df_pivot.reindex(range(24)).fillna(0)
+
+    df_pivot_min = df_pivot.min(axis=1)
+    df_pivot_max = df_pivot.max(axis=1)
+    df_pivot_q10 = df_pivot.quantile(0.10, axis=1)
+    df_pivot_q25 = df_pivot.quantile(0.25, axis=1)
+    df_pivot_q40 = df_pivot.quantile(0.40, axis=1)
+    df_pivot_q50 = df_pivot.quantile(0.5, axis=1)
+    df_pivot_q60 = df_pivot.quantile(0.6, axis=1)
+    df_pivot_q75 = df_pivot.quantile(0.75, axis=1)
+    df_pivot_q90 = df_pivot.quantile(0.90, axis=1)
+
+    df_pivot_winter = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([12,1,2])]
+    df_pivot_summer = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([6,7,8])]
+    df_pivot_spring = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([3,4,5])]
+    df_pivot_autumn = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([9,10,11])]
+
+    df_pivot_winter_mean = df_pivot_winter.mean(axis=1)
+    df_pivot_summer_mean = df_pivot_summer.mean(axis=1)
+    df_pivot_spring_mean = df_pivot_spring.mean(axis=1)
+    df_pivot_autumn_mean = df_pivot_autumn.mean(axis=1)
+
+    return (df_pivot, df_pivot_min, df_pivot_max, df_pivot_q10, df_pivot_q25, df_pivot_q40,
+            df_pivot_q50, df_pivot_q60, df_pivot_q75, df_pivot_q90,
+            df_pivot_winter, df_pivot_summer, df_pivot_spring, df_pivot_autumn,
+            df_pivot_winter_mean, df_pivot_summer_mean,
+            df_pivot_spring_mean, df_pivot_autumn_mean)
+
+# for inverters aggregated
+(df_pivot, df_pivot_min, df_pivot_max, df_pivot_q10, df_pivot_q25, df_pivot_q40,
+            df_pivot_q50, df_pivot_q60, df_pivot_q75, df_pivot_q90,
+            df_pivot_winter, df_pivot_summer, df_pivot_spring, df_pivot_autumn,
+            df_pivot_winter_mean, df_pivot_summer_mean,
+            df_pivot_spring_mean, df_pivot_autumn_mean) = calculate_pivot(df_inv_sum)
+
+# for inverter 1
+(df_pivot_1, df_pivot_min_1, df_pivot_max_1, df_pivot_q10_1, df_pivot_q25_1, df_pivot_q40_1,
+            df_pivot_q50_1, df_pivot_q60_1, df_pivot_q75_1, df_pivot_q90_1,
+            df_pivot_winter_1, df_pivot_summer_1, df_pivot_spring_1, df_pivot_autumn_1,
+            df_pivot_winter_mean_1, df_pivot_summer_mean_1,
+            df_pivot_spring_mean_1, df_pivot_autumn_mean_1) = calculate_pivot(df_inv_1["Active power(kW)"])
+
+# for inverter 2
+(df_pivot_2, df_pivot_min_2, df_pivot_max_2, df_pivot_q10_2, df_pivot_q25_2, df_pivot_q40_2,
+            df_pivot_q50_2, df_pivot_q60_2, df_pivot_q75_2, df_pivot_q90_2,
+            df_pivot_winter_2, df_pivot_summer_2, df_pivot_spring_2, df_pivot_autumn_2,
+            df_pivot_winter_mean_2, df_pivot_summer_mean_2,
+            df_pivot_spring_mean_2, df_pivot_autumn_mean_2) = calculate_pivot(df_inv_2["Active power(kW)"])
+
 ########################################################################################
 ################################## Panel 3 #############################################
 ########################################################################################
@@ -425,6 +505,74 @@ ax[2].annotate(f"{no_hours_negative} timer m. negativ rå elpris",
                ha='left',
                fontsize=fs,
                color= red_color)
+
+########## additional annotation on negative prices ##########
+prices = g_prices["DayAheadPriceDKK"].copy()
+negative_prices = prices[prices < 0]
+positive_prices = prices[prices >= 0]
+
+prices.loc[negative_prices.index] = negative_prices
+prices.loc[positive_prices.index] = 0
+
+df_hourly = prices.copy()
+df_hourly = df_hourly.to_frame()  # convert Series to DataFrame
+df_hourly['date'] = df_hourly.index.date
+df_hourly['hour'] = df_hourly.index.hour
+df_el_neg_prices_pivot = df_hourly.pivot_table(values='DayAheadPriceDKK', index='hour', columns='date')
+
+# match columns of df_el_neg_prices_pivot (price data) and df_pivot (yield data)
+common_columns = df_el_neg_prices_pivot.columns.intersection(df_pivot.columns)
+df_el_neg_prices_pivot = df_el_neg_prices_pivot[common_columns]
+df_pivot = df_pivot[common_columns]
+
+min_threshold_price = -0.02 # DKK/kWh
+min_threshold_PV_yield = 50 # kWh
+count_hours = 0
+yield_at_negative_price = 0
+for col in df_el_neg_prices_pivot.columns:
+    df_plot = df_el_neg_prices_pivot[col]
+
+    condition_1 = len(df_plot[df_plot < 0]) > 0 # check if any negative prices exist
+    condition_2 = df_pivot[col].sum() > min_threshold_PV_yield # check if total energy production of the considered day is greater than 50 kWh
+    condition_3 = df_plot.min() < min_threshold_price # check if there are prices below -0.02 DKK/kWh
+
+    if condition_1 and condition_2 and condition_3:  # check if any coincidental negative prices occur
+
+        # create boolean variable to track coincidental negative prices (i.e., PV yield in parallel with negative prices)
+        df_bool = df_plot.copy()
+        df_bool[df_bool >= min_threshold_price] = 0
+        df_bool[df_bool < min_threshold_price] = 1
+
+        # count hours where df_bool is greater than 0
+        index_relevant = df_bool[df_bool > 0].index
+        count_hours += len(index_relevant)
+        yield_at_negative_price += df_pivot[col].loc[index_relevant].sum()
+
+self_consumption_rate = 0.8
+magnitude_negative_price_high = 0.2 # DKK/kWh (high assumption)
+magnitude_negative_price_low = 0.1 # DKK/kWh (low assumption)
+costs_high = yield_at_negative_price * (1-self_consumption_rate) * magnitude_negative_price_high
+costs_low = yield_at_negative_price * (1-self_consumption_rate) * magnitude_negative_price_low
+print(f"Number of hours with coincidental negative prices: {count_hours} hours")
+print(f"Total energy yield during negative price hours: {yield_at_negative_price:.2f} kWh")
+
+def format_number(number):
+    formatted_number = f"{number:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return formatted_number
+
+ax[2].annotate(r"$\mathbf{Negative}$" + " " + r"$\mathbf{elpriser}$" + f": {count_hours} timer under elproduktion ({format_number(yield_at_negative_price)} kWh)\n" +
+               f" hvoraf ca. {format_number(yield_at_negative_price*(1 - self_consumption_rate))} kWh eksporteret til nettet, hvilket kan medføre\n" +
+               f"omkostninger på ca. {format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_low)}" +
+               f" - {format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_high)} DKK pr. år i alt.",
+               xy=(0.42, 0.01),
+               xycoords='figure fraction',
+               bbox=dict(boxstyle="round,pad=0.3", edgecolor="gray", facecolor=red_color, alpha=0.2),
+               ha='left',
+               fontsize=fs-2,
+               color= "k",
+               alpha=0.8
+               )
+###########################################################
 
 ax[2].set_ylim([-0.7, g_prices["ElPriceDKK"].max()*1.1])
 ax[2].set_xticks(ax[0].get_xticks(minor=True), minor=True)
@@ -574,85 +722,6 @@ fig.savefig("figures/production_panel_2.png", bbox_inches='tight')
 ########################################################################################
 ############################# Panel 1 ##################################################
 ########################################################################################
-files = os.listdir("data/inverter_data/")
-files_list = [f for f in files if f.endswith(".csv")]
-
-df_hourly_production_inv = {}
-for file in files_list:
-    df_inv_hourly = pd.read_csv(f"data/inverter_data/{file}", index_col=0, parse_dates=True)
-    inverter = file.split("_")[1]
-    month = df_inv_hourly.index[0].month
-    year = df_inv_hourly.index[0].year
-    ym = f"{year}-{month:02d}"
-    df_hourly_production_inv[(inverter, ym)] = df_inv_hourly
-
-# set index and sum the two inverters
-df_inv_1 = pd.concat(df_hourly_production_inv).loc["1"].reset_index()
-df_inv_2 = pd.concat(df_hourly_production_inv).loc["2"].reset_index()
-df_inv_1.set_index("time", inplace=True)
-df_inv_2.set_index("time", inplace=True)
-
-# only include data from 1st January 2025
-df_inv_1 = df_inv_1.sort_index().loc["2025-01-01":]
-df_inv_2 = df_inv_2.sort_index().loc["2025-01-01":] 
-common_index = df_inv_1.index.intersection(df_inv_2.index)
-df_inv_sum = df_inv_1.loc[common_index, "Active power(kW)"] + df_inv_2.loc[common_index, "Active power(kW)"]
-
-def calculate_pivot(df_inv_sum):
-    df_hourly = df_inv_sum.copy()
-    df_hourly = df_hourly.to_frame()  # convert Series to DataFrame
-    df_hourly['date'] = df_hourly.index.date
-    df_hourly['hour'] = df_hourly.index.hour - 1
-    df_pivot = df_hourly.pivot_table(values='Active power(kW)', index='hour', columns='date')
-    df_pivot = df_pivot.reindex(range(24)).fillna(0)
-
-    df_pivot_min = df_pivot.min(axis=1)
-    df_pivot_max = df_pivot.max(axis=1)
-    df_pivot_q10 = df_pivot.quantile(0.10, axis=1)
-    df_pivot_q25 = df_pivot.quantile(0.25, axis=1)
-    df_pivot_q40 = df_pivot.quantile(0.40, axis=1)
-    df_pivot_q50 = df_pivot.quantile(0.5, axis=1)
-    df_pivot_q60 = df_pivot.quantile(0.6, axis=1)
-    df_pivot_q75 = df_pivot.quantile(0.75, axis=1)
-    df_pivot_q90 = df_pivot.quantile(0.90, axis=1)
-
-    df_pivot_winter = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([12,1,2])]
-    df_pivot_summer = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([6,7,8])]
-    df_pivot_spring = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([3,4,5])]
-    df_pivot_autumn = df_pivot.loc[:, pd.to_datetime(df_pivot.columns).month.isin([9,10,11])]
-
-    df_pivot_winter_mean = df_pivot_winter.mean(axis=1)
-    df_pivot_summer_mean = df_pivot_summer.mean(axis=1)
-    df_pivot_spring_mean = df_pivot_spring.mean(axis=1)
-    df_pivot_autumn_mean = df_pivot_autumn.mean(axis=1)
-
-    return (df_pivot, df_pivot_min, df_pivot_max, df_pivot_q10, df_pivot_q25, df_pivot_q40,
-            df_pivot_q50, df_pivot_q60, df_pivot_q75, df_pivot_q90,
-            df_pivot_winter, df_pivot_summer, df_pivot_spring, df_pivot_autumn,
-            df_pivot_winter_mean, df_pivot_summer_mean,
-            df_pivot_spring_mean, df_pivot_autumn_mean)
-
-# for inverters aggregated
-(df_pivot, df_pivot_min, df_pivot_max, df_pivot_q10, df_pivot_q25, df_pivot_q40,
-            df_pivot_q50, df_pivot_q60, df_pivot_q75, df_pivot_q90,
-            df_pivot_winter, df_pivot_summer, df_pivot_spring, df_pivot_autumn,
-            df_pivot_winter_mean, df_pivot_summer_mean,
-            df_pivot_spring_mean, df_pivot_autumn_mean) = calculate_pivot(df_inv_sum)
-
-# for inverter 1
-(df_pivot_1, df_pivot_min_1, df_pivot_max_1, df_pivot_q10_1, df_pivot_q25_1, df_pivot_q40_1,
-            df_pivot_q50_1, df_pivot_q60_1, df_pivot_q75_1, df_pivot_q90_1,
-            df_pivot_winter_1, df_pivot_summer_1, df_pivot_spring_1, df_pivot_autumn_1,
-            df_pivot_winter_mean_1, df_pivot_summer_mean_1,
-            df_pivot_spring_mean_1, df_pivot_autumn_mean_1) = calculate_pivot(df_inv_1["Active power(kW)"])
-
-# for inverter 2
-(df_pivot_2, df_pivot_min_2, df_pivot_max_2, df_pivot_q10_2, df_pivot_q25_2, df_pivot_q40_2,
-            df_pivot_q50_2, df_pivot_q60_2, df_pivot_q75_2, df_pivot_q90_2,
-            df_pivot_winter_2, df_pivot_summer_2, df_pivot_spring_2, df_pivot_autumn_2,
-            df_pivot_winter_mean_2, df_pivot_summer_mean_2,
-            df_pivot_spring_mean_2, df_pivot_autumn_mean_2) = calculate_pivot(df_inv_2["Active power(kW)"])
-
 def plot_daily_profile(ax,
                        df_pivot,
                        df_pivot_min,
