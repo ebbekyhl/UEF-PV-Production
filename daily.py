@@ -643,8 +643,8 @@ ax_n.set_title(r"$\mathbf{Kumuleret}$" + " " + r"$\mathbf{produktion}$" + " (MWh
 (pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index[0:-1]].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
 
 # cumulative sum of monthly production
-(production_monthly_sum_cum/1e3).plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10, label = "Produktion 2025")
-(self_consumption.cumsum()/1e3).plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug 2025")
+(production_monthly_sum_cum/1e3).loc[production_monthly_sum.index[0:-1]].plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10, label = "Produktion")
+(self_consumption.cumsum()/1e3).loc[production_monthly_sum.index[0:-1]].plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug")
 
 # Daily production
 ax_i = fig.add_subplot(gs[1,:])
@@ -684,7 +684,6 @@ ax_k.text(pd.to_datetime("2025-01-10"), panel_footprint*1.05, "Fabrik", fontsize
 ax_k.text(pd.to_datetime("2029-11-01"), 0, "Break-even", fontsize=fs, color="gray")
 ax_k.text(pd.to_datetime("2027-01-01"), 12, "Hvis samme udvikling fortsætter", fontsize=fs, color="green", rotation=-7, alpha =0.5)
 
-
 ax_k.set_xlim([df.index.min(), pd.to_datetime("2030-06-01")])
 
 # Layout 
@@ -714,6 +713,8 @@ ax_m.legend(handles[-3:], labels[-3:],
             loc='upper left', 
             borderaxespad=0., 
             prop = {'size': fs-2})
+ax_m.set_xticklabels(production_monthly_sum.index)
+ax_m.set_xlim(-1, len(production_monthly_sum.index)-0.5)
 
 # add copyright on bottom right of the figure
 fig.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
