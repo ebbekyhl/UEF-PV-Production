@@ -663,6 +663,13 @@ ax_n.set_title(r"$\mathbf{Kumuleret}$" + " " + r"$\mathbf{produktion}$" + " (MWh
 (production_monthly_sum_cum/1e3).loc[production_monthly_sum.index[0:-1]].plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10, label = "Produktion")
 (self_consumption.cumsum()/1e3).loc[production_monthly_sum.index[0:-1]].plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug")
 
+ax_n.fill_between(production_monthly_sum_cum.index[0:-1], 
+                  (self_consumption.cumsum()/1e3).loc[production_monthly_sum.index[0:-1]],
+                  (production_monthly_sum_cum/1e3).loc[production_monthly_sum.index[0:-1], "Produktion"],
+                  color="pink",
+                  alpha=0.3,
+                  label = "Eksport til net")
+
 # Daily production
 ax_i = fig.add_subplot(gs[1,:])
 ax_i.set_title(r"$\mathbf{Daglig}$" + " " + r"$\mathbf{produktion}$" + " (kWh)", color = "gray")
