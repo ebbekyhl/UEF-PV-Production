@@ -8,6 +8,4 @@ permalink: /panel-1/
 
 # Panel 1
 
-<img src="{{ site.baseurl }}/figures/production_panel_1.png?v={{ site.github.build_revision }}" 
-     alt="Panel 1" 
-     style="width:90%; max-width:1200px; display:block; margin:auto;" />
+![Panel 1]({{ site.baseurl }}/figures/production_panel_1.png?v={{ site.github.build_revision }})
