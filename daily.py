@@ -446,10 +446,27 @@ df_emissions_carrier = df_emissions_carrier[shares[shares > 0.1].index]
                                                                                linewidth = 0, 
                                                                                color = [colors[col] for col in df_emissions_carrier.columns], ax=ax[0])
 
-ax[1].fill_between(df_emissions_intensity.index, 0, df_emissions_intensity, color='lightgray', alpha=1, zorder = 0)
+ax[1].fill_between(df_emissions_intensity.index, 0, df_emissions_intensity, color='k', alpha=0.5, zorder = 0, lw = 0)
 ax[1].set_ylim([0, df_emissions_intensity.max()*1.1])
 ax[1].set_xticks(ax[0].get_xticks(minor=True), minor=True)
 ax[1].set_xticklabels(ax[0].get_xticklabels())
+
+# set frequency information to daily in the index of df
+df = df.asfreq('D')
+
+ax_t_1 = ax[1].twinx()
+# make twinx axis appear behind the main axis
+ax_t_1.set_zorder(ax[1].get_zorder()-1)
+ax_t_1.patch.set_visible(False)
+# ensure that patch of ax_t_1 is transparent and the same for ax[1]
+ax[1].patch.set_visible(False)
+ax_t_1.fill_between(df.index, 0, df["Produktion"], color=solar_color, alpha=0.25, zorder = 0, lw=0)
+ax_t_1.set_ylim([0, df["Produktion"].max()*1.1])
+# make colors and ticks and labels of ax_t_1 match the color of the line
+ax_t_1.spines['right'].set_color(solar_color)
+ax_t_1.yaxis.label.set_color(solar_color)
+ax_t_1.tick_params(axis='y', colors=solar_color)
+ax_t_1.set_ylabel("UEF solpanel (kWh)", color=solar_color)
 
 fixed_price = 1.7
 price_above = g_prices["ElPriceDKK"] > fixed_price
@@ -807,10 +824,18 @@ def plot_daily_profile(ax,
    if name in ["Inverter 1", "Inverter 2"]:
       ax.set_xticklabels([f"{i}:00" if i % 3 == 0 else "" for i in range(len(xticks))], rotation=30, fontsize = fs - 2)
 
+   mloc = plt.MultipleLLocator(3)
+   ax.xaxis.set_major_locator(mloc)
+
+   minorloc = plt.MultipleLocator(1)
+   ax.xaxis.set_minor_locator(minorloc)
+
    ax.legend().set_visible(False)
 
    if name != "":
       ax.set_ylim(0, 35)
+   else:
+      ax.set_ylim(0, ax.get_ylim()[1])
 
    if name == "":
       # add hatch to legend in ax_m
