@@ -824,7 +824,7 @@ def plot_daily_profile(ax,
    if name in ["Inverter 1", "Inverter 2"]:
       ax.set_xticklabels([f"{i}:00" if i % 3 == 0 else "" for i in range(len(xticks))], rotation=30, fontsize = fs - 2)
 
-   mloc = plt.MultipleLLocator(3)
+   mloc = plt.MultipleLocator(3)
    ax.xaxis.set_major_locator(mloc)
 
    minorloc = plt.MultipleLocator(1)
