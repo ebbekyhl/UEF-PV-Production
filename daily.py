@@ -233,7 +233,7 @@ url_prices = f'https://api.energidataservice.dk/dataset/DayAheadPrices?start={st
 # from url_emissions, we can calculate CO2 emissions offset
 g_emissions = pd.read_json(url_emissions)
 g_emissions = pd.json_normalize(g_emissions["records"])
-g_emissions.index = pd.to_datetime(g_emissions["HourDK"])
+g_emissions.index = pd.to_datetime(g_emissions["TimeDK"])
 df_emissions = g_emissions[['ProductionType', 'CO2PerkWh', 'Production_MWh']]
 df_emissions.sort_index(inplace=True)
 df_emissions_tCO2 = df_emissions["CO2PerkWh"]*df_emissions["Production_MWh"]*1000 # gCO2
@@ -245,7 +245,7 @@ df_emissions_intensity = df_emissions_tCO2_d / df_emissions_production_d # gCO2/
 # from url_prices, we can calculate savings for AU
 g_prices = pd.read_json(url_prices)
 g_prices = pd.json_normalize(g_prices["records"])
-g_prices.index = pd.to_datetime(g_prices["HourDK"])
+g_prices.index = pd.to_datetime(g_prices["TimeDK"])
 g_prices["DayAheadPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
 
 energinet_tariffs = (7.2 + 4.3)/100 # DKK/kWh, Energinets systemtarif + Nettarif # https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
