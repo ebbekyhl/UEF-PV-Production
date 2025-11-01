@@ -233,7 +233,7 @@ url_prices = f'https://api.energidataservice.dk/dataset/DayAheadPrices?start={st
 # from url_emissions, we can calculate CO2 emissions offset
 g_emissions = pd.read_json(url_emissions)
 g_emissions = pd.json_normalize(g_emissions["records"])
-g_emissions.index = pd.to_datetime(g_emissions["TimeDK"])
+g_emissions.index = pd.to_datetime(g_emissions["HourDK"])
 df_emissions = g_emissions[['ProductionType', 'CO2PerkWh', 'Production_MWh']]
 df_emissions.sort_index(inplace=True)
 df_emissions_tCO2 = df_emissions["CO2PerkWh"]*df_emissions["Production_MWh"]*1000 # gCO2
