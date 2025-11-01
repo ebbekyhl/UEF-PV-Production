@@ -797,7 +797,7 @@ def plot_daily_profile(ax,
    #     seasons_mean[season_name].plot(ax=ax, lw=3, label = f"Gennemsnitlig {season_name}dag", color=season_colors[season_name])
 
    # plot last day in dataset
-   days_back = 1
+   days_back = 2 # two days back to avoid incomplete last day
    df_pivot.iloc[:, -days_back].plot(ax=ax, lw=1, ls="--", color="orange", label="Seneste dag\n(" + str(df_pivot.columns[-days_back]) + ")")
 
    if name == "":
