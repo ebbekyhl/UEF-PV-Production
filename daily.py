@@ -228,7 +228,7 @@ start = '2025-01-01'
 today = pd.Timestamp.now()
 end = str(today.year) + "-" + str(today.month).zfill(2) + "-" + (str(today.day).zfill(2))
 url_emissions = f'https://api.energidataservice.dk/dataset/DeclarationProduction?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
-url_prices = f'https://api.energidataservice.dk/dataset/Elspotprices?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
+url_prices = f'https://api.energidataservice.dk/dataset/DayAheadPrices?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
 
 # from url_emissions, we can calculate CO2 emissions offset
 g_emissions = pd.read_json(url_emissions)
@@ -246,7 +246,7 @@ df_emissions_intensity = df_emissions_tCO2_d / df_emissions_production_d # gCO2/
 g_prices = pd.read_json(url_prices)
 g_prices = pd.json_normalize(g_prices["records"])
 g_prices.index = pd.to_datetime(g_prices["HourDK"])
-g_prices["SpotPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
+g_prices["DayAheadPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
 
 energinet_tariffs = (7.2 + 4.3)/100 # DKK/kWh, Energinets systemtarif + Nettarif # https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
 transport_tariffs_s_low = 12.2/100 # DKK/kWh https://elberegner.dk/guides/hvad-koster-transport-af-el/
@@ -256,7 +256,7 @@ transport_tariffs_w_low = 12.2/100 # DKK/kWh, https://elberegner.dk/guides/hvad-
 transport_tariffs_w_mid = 36.61/100 # DKK/kWh, https://elberegner.dk/guides/hvad-koster-transport-af-el/
 transport_tariffs_w_high = 109.85/100 # DKK/kWh, https://elberegner.dk/guides/hvad-koster-transport-af-el/
 
-spot_prices = pd.DataFrame(g_prices["SpotPriceDKK"]).sort_index()
+spot_prices = pd.DataFrame(g_prices["DayAheadPriceDKK"]).sort_index()
 spot_prices["month"] = spot_prices.index.month
 spot_prices["season"] = np.where(spot_prices["month"].isin([10, 11, 12, 1, 2, 3]), "winter", "summer")
 # add low level between 00 and 06, mid level between 06 and 17, high level between 17 and 21, mid level between 21 and 24
@@ -280,7 +280,7 @@ spot_prices.loc[s_mid_index, "transport"] = transport_tariffs_s_mid
 spot_prices.loc[s_high_index, "transport"] = transport_tariffs_s_high
 
 # spot_prices["level"]
-g_prices["ElPriceDKK"] = spot_prices["SpotPriceDKK"] + spot_prices["transport"] + energinet_tariffs
+g_prices["ElPriceDKK"] = spot_prices["DayAheadPriceDKK"] + spot_prices["transport"] + energinet_tariffs
 
 carriers = ['BioGas', 'Straw', 'Wood', 'FossilGas', 'Coal', 'Fossil Oil',
               'Waste', 'Hydro', 'Solar', 'WindOffshore', 'WindOnshore']
@@ -369,7 +369,7 @@ ax[2].fill_between(prices_low.index,
                    alpha=0.5, 
                    zorder = 0)
 
-neg_prices = g_prices["SpotPriceDKK"].copy()
+neg_prices = g_prices["DayAheadPriceDKK"].copy()
 neg_prices[neg_prices >= 0] = np.nan 
 ax[2].fill_between(neg_prices.index, 
                    0, 
