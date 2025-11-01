@@ -506,19 +506,19 @@ ax[2].fill_between(neg_prices.index,
 
 no_hours_above = prices_high.loc[price_above].shape[0]
 ax[2].annotate("Fast pris", 
-               xy=(pd.to_datetime("7/7/2025"), 1.9),
+               xy=(pd.to_datetime("7/8/2025"), 1.9),
                ha='left',
                fontsize=fs,
                color= "k")
 ax[2].annotate(f"{no_hours_above} timer over fast pris", 
-               xy=(pd.to_datetime("7/7/2025"), 3.5),
+               xy=(pd.to_datetime("7/8/2025"), 3.8),
                ha='left',
                fontsize=fs,
                color= blue_color)
 
 no_hours_negative = neg_prices.dropna().shape[0]
 ax[2].annotate(f"{no_hours_negative} timer m. negativ rå elpris", 
-               xy=(pd.to_datetime("7/7/2025"), -0.55),
+               xy=(pd.to_datetime("7/8/2025"), -0.55),
                ha='left',
                fontsize=fs,
                color= red_color)
@@ -619,7 +619,7 @@ for ax_i in ax:
 
 # reverse legend order
 handles, labels = ax[0].get_legend_handles_labels()
-fig0.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.91, 0.88), loc='upper left', borderaxespad=0.)
+fig0.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.91, 0.92), loc='upper left', borderaxespad=0.)
 
 # add copyright on bottom right of the figure
 fig0.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
