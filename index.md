@@ -7,11 +7,12 @@ title: UEF PV Production
 
 This page describes the energy yield from the [UEF](https://www.uef.dk/home) solar PV installation in Aarhus, Denmark.
 
-Panel overview:
+Figure panels overview:
 
 - [Panel 1: Intraday power supply]({{ site.baseurl }}/panel-1/)
 - [Panel 2: Energy yield and CO2 footprint]({{ site.baseurl }}/panel-2/)
 - [Panel 3: Energy mix, CO2 intensity, and electricity prices of the local grid]({{ site.baseurl }}/panel-3/)
+- [Panel 4: Average electricity prices and PV yield intraday curves]({{ site.baseurl }}/panel-4/)
 
 The information shown on this site is updated using Github Actions. The workflow currently acquires data from the following sources:
 - Reported energy yield from [AURORA dashboard](https://dashboard.aurora-h2020.eu/en-GB/pv-data?site=DK01&month=2025-06)
@@ -32,3 +33,5 @@ Data is updated daily, while emails are sent either monthly or quarterly.
 ![UEF PV installation production data](/figures/production_panel_2.png)
 
 ![UEF PV installation production data](/figures/production_panel_3.png)
+
+![UEF PV installation production data](/figures/production_panel_4.png)
