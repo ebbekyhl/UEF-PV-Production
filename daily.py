@@ -932,12 +932,70 @@ plot_daily_profile(ax_3,
 fig_hourly.text(0.42, -0.05, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
 fig_hourly.savefig("figures/production_panel_1.png", bbox_inches='tight')
 
+#######################################################################################
+############################### Panel 4 ###############################################
+#######################################################################################
+df_hourly = g_prices["ElPriceDKK"].sort_index().copy()
+df_hourly = df_hourly.to_frame()  # convert Series to DataFrame
+df_hourly['date'] = df_hourly.index.date
+df_hourly['hour'] = df_hourly.index.hour
+df_el_prices_pivot = df_hourly.pivot_table(values='ElPriceDKK', index='hour', columns='date')
+df_el_prices_pivot_q50 = df_el_prices_pivot.quantile(0.5, axis=1)
+df_el_prices_pivot_q10 = df_el_prices_pivot.quantile(0.1, axis=1)
+df_el_prices_pivot_q90 = df_el_prices_pivot.quantile(0.9, axis=1) 
+df_el_prices_pivot_q25 = df_el_prices_pivot.quantile(0.25, axis=1)
+df_el_prices_pivot_q75 = df_el_prices_pivot.quantile(0.75, axis=1)
+
+fig, ax = plt.subplots(figsize=(10*aspect_ratio,10))
+
+# energy yield
+df_pivot_q50.plot(ax=ax, color=solar_color, lw=2, label="Solpanel median effekt (kW)")
+ax.fill_between(df_pivot.index, df_pivot_q25, df_pivot_q75, color=solar_color, alpha=0.1, lw=0, label="Solpanel 25-75 percentil")
+
+# electricity prices
+ax_t = ax.twinx()
+df_el_prices_pivot_q50.plot(ax=ax_t, color=red_color, lw=2, label="Elpris median (DKK/kWh)")
+ax_t.fill_between(df_el_prices_pivot_q50.index, df_el_prices_pivot_q25, df_el_prices_pivot_q75, color=red_color, alpha=0.1, lw=0, label="Elpris 25-75 percentil")
+
+ax.set_xlim(0,23)
+
+# all properties of the ax_t should match the color of the line
+ax_t.spines['right'].set_color(red_color)
+ax_t.yaxis.label.set_color(red_color)
+ax_t.tick_params(axis='y', colors=red_color)
+ax_t.set_ylabel("Elpris (DKK/kWh)", color=red_color)
+ax.set_xlabel("")
+
+ax.set_ylabel("Solpanel effekt (kW)", color=solar_color)
+
+ax.tick_params(axis='y', colors=solar_color)
+ax.set_title("Sammenligning af solpanel effekt og elpriser", color = "gray")
+ax.grid(color = "gray", alpha = 0.3, lw=1, ls=':')
+
+# hide upper and right spines
+for ax_i in [ax, ax_t]:
+    ax_i.spines['top'].set_visible(False)
+    ax_i.spines['left'].set_color(solar_color)
+    # only show every 3rd xtick label
+    ax_i.set_xticks(np.arange(0, 24, 1))
+    xticks = ax_i.get_xticks()
+    ax_i.set_xticklabels([f"{i}:00" if i % 3 == 0 else "" for i in xticks], rotation=30, fontsize = fs - 2)
+
+fig.legend(bbox_to_anchor=(0.13, 0.75), loc='lower left', borderaxespad=0., prop = {'size': fs}, labelcolor="gray")
+
+mloc = plt.MultipleLocator(1)
+ax.xaxis.set_major_locator(mloc)
+
+fig.text(0.43, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+fig.savefig("figures/production_panel_4.png", bbox_inches='tight')
+
 ########################################################################################
-############################# Save panel A and B #######################################
+############################# Save panels ##############################################
 ########################################################################################
 pngs = ["figures/production_panel_1.png",
         "figures/production_panel_2.png", 
         "figures/production_panel_3.png",
+        "figures/production_panel_4.png"
         ]
 
 # --- Make a PDF with those PNGs as pages ---
