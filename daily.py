@@ -228,7 +228,8 @@ start = '2025-01-01'
 today = pd.Timestamp.now()
 end = str(today.year) + "-" + str(today.month).zfill(2) + "-" + (str(today.day).zfill(2))
 url_emissions = f'https://api.energidataservice.dk/dataset/DeclarationProduction?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
-url_prices = f'https://api.energidataservice.dk/dataset/DayAheadPrices?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
+url_prices_1 = f'https://api.energidataservice.dk/dataset/Elspotprices?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
+url_prices_2 = f'https://api.energidataservice.dk/dataset/DayAheadPrices?start={start}&end={end}&filter=' + '{"PriceArea":["DK1"]}'
 
 # from url_emissions, we can calculate CO2 emissions offset
 g_emissions = pd.read_json(url_emissions)
@@ -243,13 +244,30 @@ df_emissions_production_d = df_emissions_production.resample("d").sum()
 df_emissions_intensity = df_emissions_tCO2_d / df_emissions_production_d # gCO2/kWh 
 
 # from url_prices, we can calculate savings for AU
-g_prices = pd.read_json(url_prices)
-g_prices = pd.json_normalize(g_prices["records"])
-g_prices["TimeDK"] = pd.to_datetime(g_prices["TimeDK"])
-index_wo_duplicates = g_prices["TimeDK"].drop_duplicates().index
-g_prices = g_prices.loc[index_wo_duplicates]
-g_prices.set_index("TimeDK", inplace=True)
-g_prices["DayAheadPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
+g_prices_1 = pd.read_json(url_prices_1)
+g_prices_1 = pd.json_normalize(g_prices_1["records"])
+g_prices_1["HourDK"] = pd.to_datetime(g_prices_1["HourDK"])
+g_prices_1.set_index("HourDK", inplace=True)
+g_prices_1["SpotPriceEUR"] /= 1000  # convert from DKK/MWh to DKK/kWh
+g_prices_1["SpotPriceDKK"] /= 1000  # convert from EUR/MWh to EUR/kWh
+
+g_prices_1.rename(columns={"SpotPriceDKK":"DayAheadPriceDKK",
+                           "SpotPriceEUR":"DayAheadPriceEUR",
+                           "HourUTC": "TimeUTC",
+                           "HourDK": "TimeDK"}, inplace=True)
+
+g_prices_2 = pd.read_json(url_prices_2)
+g_prices_2 = pd.json_normalize(g_prices_2["records"])
+g_prices_2["TimeDK"] = pd.to_datetime(g_prices_2["TimeDK"])
+index_wo_duplicates = g_prices_2["TimeDK"].drop_duplicates().index
+g_prices_2 = g_prices_2.loc[index_wo_duplicates]
+g_prices_2.set_index("TimeDK", inplace=True)
+g_prices_2["DayAheadPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
+g_prices_2["DayAheadPriceEUR"] /= 1000  # convert from EUR/MWh to EUR/kWh
+
+# combine the two price dataframes
+g_prices = pd.concat([g_prices_1.sort_index(), 
+                      g_prices_2.sort_index()], axis=0)
 
 energinet_tariffs = (7.2 + 4.3)/100 # DKK/kWh, Energinets systemtarif + Nettarif # https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
 transport_tariffs_s_low = 12.2/100 # DKK/kWh https://elberegner.dk/guides/hvad-koster-transport-af-el/
