@@ -265,6 +265,13 @@ g_prices_2.set_index("TimeDK", inplace=True)
 g_prices_2["DayAheadPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
 g_prices_2["DayAheadPriceEUR"] /= 1000  # convert from EUR/MWh to EUR/kWh
 
+# New data source are 15-min values, we need to resample to hourly values
+g_prices_2 = g_prices_2.resample("h").agg({"DayAheadPriceDKK":"mean",
+                                            "DayAheadPriceEUR":"mean",
+                                            "TimeUTC":"first",
+                                            "PriceArea":"first",
+                                            })
+
 # combine the two price dataframes
 g_prices = pd.concat([g_prices_1.sort_index(), 
                       g_prices_2.sort_index()], axis=0)
