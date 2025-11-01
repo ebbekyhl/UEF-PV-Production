@@ -245,7 +245,10 @@ df_emissions_intensity = df_emissions_tCO2_d / df_emissions_production_d # gCO2/
 # from url_prices, we can calculate savings for AU
 g_prices = pd.read_json(url_prices)
 g_prices = pd.json_normalize(g_prices["records"])
-g_prices.index = pd.to_datetime(g_prices["TimeDK"])
+g_prices["TimeDK"] = pd.to_datetime(g_prices["TimeDK"])
+index_wo_duplicates = g_prices["TimeDK"].drop_duplicates().index
+g_prices = g_prices.loc[index_wo_duplicates]
+g_prices.set_index("TimeDK", inplace=True)
 g_prices["DayAheadPriceDKK"] /= 1000  # convert from DKK/MWh to DKK/kWh
 
 energinet_tariffs = (7.2 + 4.3)/100 # DKK/kWh, Energinets systemtarif + Nettarif # https://energinet.dk/el/elmarkedet/tariffer/aktuelle-tariffer/
