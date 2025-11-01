@@ -412,8 +412,9 @@ ax[2].annotate(f"{no_hours_above} timer over fast pris",
                fontsize=fs,
                color= blue_color)
 
-ax[2].annotate("Negativ rå elpris", 
-               xy=(pd.to_datetime("7/1/2025"), -0.55),
+no_hours_negative = neg_prices.dropna().shape[0]
+ax[2].annotate(f"{no_hours_negative} timer m. negativ rå elpris", 
+               xy=(pd.to_datetime("7/7/2025"), -0.55),
                ha='left',
                fontsize=fs,
                color= red_color)
