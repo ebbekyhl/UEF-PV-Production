@@ -7,6 +7,17 @@ title: UEF PV Production
 
 This page describes the energy yield from the [UEF](https://www.uef.dk/home) solar PV installation in Aarhus, Denmark.
 
+Here’s a short podcast episode explaining the data below:
+
+<audio controls>
+  <source src="{{ 'Denmark_s_Solar_Challenge__Citizen_Cooperatives.m4a' | relative_url }}" type="audio/mp4">
+  Your browser does not support the audio element.
+</audio>
+
+## Data Overview
+
+Here is the visualization and description of the data…
+
 Figure panels overview:
 
 - [Panel 1: Intraday power supply]({{ site.baseurl }}/panel-1/)
