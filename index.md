@@ -35,9 +35,7 @@ Furthermore, the energy yields are compared with simulated estimates from [PVGIS
 
 The workflow includes a CO2 accounting of the emissions associated with manufacturing the panels, balanced by the avoided emissions from providing CO2-free electricity to the consumer. Here, avoided emissions are calculated based on the CO2-intensity of the electricity that would otherwise have been imported from the local grid. 
 
-The GitHub action workflow includes an email sent to recipients listed in the secret variable "EMAIL_TO" with the created figures attached to.
-
-Data is updated daily, while emails are sent either monthly or quarterly.
+The visualizations and data presented on this page are updated daily, while some data sources might be refreshed less frequency. 
 
 ![UEF PV installation production data](/figures/production_panel_1.png)
 
