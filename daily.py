@@ -215,15 +215,25 @@ if use_inverter_data:
 ############################# Monthly values ###########################################
 ########################################################################################
 # df comes in daily values, here we convert it to monthly values
-production_monthly_sum = df.groupby(df.index.month).sum() # sum of production per month
-production_monthly_mean = df.groupby(df.index.month).mean() # mean of production per month
+df["year"] = df.index.year
+df["month"] = df.index.month#.map(month_mapping)
 
-production_monthly_sum.index = production_monthly_sum.index.map(month_mapping)
-# production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
+# df comes in daily values, here we convert it to monthly values
+production_monthly_sum = df.groupby([df.year, df.month]).sum() # sum of production per month
+production_monthly_mean = df.groupby([df.year, df.month]).mean() # mean of production per month
 
-production_monthly_sum_cum = production_monthly_sum.cumsum()
+production_monthly_sum.reset_index(inplace=True)
+production_monthly_sum["month"] = production_monthly_sum["month"].map(month_mapping)
+production_monthly_mean.reset_index(inplace=True)
+production_monthly_mean["month"] = production_monthly_mean["month"].map(month_mapping)
 
-production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production values
+# # production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
+
+production_monthly_sum_cums = {}
+for year in production_monthly_mean.year.unique():
+    production_monthly_sum_cums[year] = production_monthly_sum.query(f"year == {year}").drop(columns = ["year"]).set_index("month").cumsum()
+
+production_last_month = pd.concat(production_monthly_sum_cums).reset_index().iloc[-1]["Produktion"]  # get the last month production values
 
 with open("email_summary.txt", "w", newline="") as f:
     f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
@@ -453,10 +463,9 @@ df_emissions_carrier = df_emissions_carrier[shares[shares > 0.1].index]
                                                                                linewidth = 0, 
                                                                                color = [colors[col] for col in df_emissions_carrier.columns], ax=ax[0])
 
+df_emissions_intensity.plot(ax=ax[1], color = None, lw = 0)
 ax[1].fill_between(df_emissions_intensity.index, 0, df_emissions_intensity, color='k', alpha=0.5, zorder = 0, lw = 0)
 ax[1].set_ylim([0, df_emissions_intensity.max()*1.1])
-ax[1].set_xticks(ax[0].get_xticks(minor=True), minor=True)
-ax[1].set_xticklabels(ax[0].get_xticklabels())
 
 # set frequency information to daily in the index of df
 df = df.asfreq('D')
@@ -584,11 +593,12 @@ def format_number(number):
     formatted_number = f"{number:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return formatted_number
 
-ax[2].annotate(r"$\mathbf{Negative}$" + " " + r"$\mathbf{elpriser}$" + f": {count_hours} timer under elproduktion ({format_number(yield_at_negative_price)} kWh)\n" +
-               f" hvoraf ca. {format_number(yield_at_negative_price*(1 - self_consumption_rate))} kWh eksporteret til nettet, hvilket kan medføre\n" +
-               f"omkostninger på ca. {format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_low)}" +
-               f" - {format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_high)} DKK pr. år i alt.",
-               xy=(0.42, 0.01),
+annualize = 365 / (g_prices.index.max().date() - g_prices.index.min().date()).days
+ax[2].annotate(r"$\mathbf{Negative}$" + " " + r"$\mathbf{elpriser}$" 
+               + f":\n{count_hours} timer under elproduktion ({format_number(yield_at_negative_price)} kWh)" 
+               + r"$\approx$" + f"{format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_low*annualize)}" 
+               + f" - {format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_high*annualize)} DKK pr. år.",
+               xy=(0.36, 0.01),
                xycoords='figure fraction',
                bbox=dict(boxstyle="round,pad=0.3", edgecolor="gray", facecolor=red_color, alpha=0.2),
                ha='left',
@@ -599,9 +609,9 @@ ax[2].annotate(r"$\mathbf{Negative}$" + " " + r"$\mathbf{elpriser}$" + f": {coun
 ###########################################################
 
 ax[2].set_ylim([-0.7, g_prices["ElPriceDKK"].max()*1.1])
-ax[2].set_xticks(ax[0].get_xticks(minor=True), minor=True)
-ax[2].set_xticklabels(ax[0].get_xticklabels())
 ax[2].axhline(y=fixed_price, color="k", linestyle='--', lw = 1)
+ax[2].set_xticks(ax[1].get_xticks())
+ax[2].set_xticklabels(ax[1].get_xticklabels())
 
 # add space between subplots
 fig0.subplots_adjust(hspace=0.4)
@@ -649,40 +659,51 @@ gs.update(hspace=0.4, wspace=0.15)
 ax_m = fig.add_subplot(gs[0,0])
 ax_m.set_title(r"$\mathbf{Månedlige}$" + " " + r"$\mathbf{produktionsværdier}$" + " (MWh)", color = "gray")
 
+ax_n = fig.add_subplot(gs[0,1])
+ax_n.set_title(r"$\mathbf{Kumuleret}$" + " " + r"$\mathbf{produktion}$" + " (MWh)", color = "gray")
+
 # bar plot of monthly production
-(production_monthly_sum/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7, label = "Produktion")
-self_consumption = production_monthly_sum["Produktion"]*self_consumption_ratio.loc[production_monthly_sum.index]
+(production_monthly_sum.drop(columns=["year","month"])/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7, label = "Produktion")
+self_consumption_ratio_index = production_monthly_sum["month"].map(self_consumption_ratio)
+self_consumption = production_monthly_sum.drop(columns=["year","month"])["Produktion"]*self_consumption_ratio_index
 (self_consumption/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.4, 
                             edgecolor="k", 
                             hatch="/",
                             width=0.7)
+# add expected production from simulation
+(pd.Series(pvgis)/1e3).plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
 
 # add expected production from simulation
-(pd.Series(pvgis)/1e3).loc[production_monthly_sum.index[0:-1]].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
+(pd.Series(pvgis).cumsum()/1e3).plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
 
-ax_n = fig.add_subplot(gs[0,1])
-ax_n.set_title(r"$\mathbf{Kumuleret}$" + " " + r"$\mathbf{produktion}$" + " (MWh)", color = "gray")
-
-# add expected production from simulation
-(pd.Series(pvgis).cumsum()/1e3).loc[production_monthly_sum.index[0:-1]].plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
+# list of colors 
+colors = {2025: "#feb24c",  2026: "#fc4e2a", 2027: "#bd0026",  2028: "#3182bd"}
 
 # cumulative sum of monthly production
-(production_monthly_sum_cum/1e3).loc[production_monthly_sum.index[0:-1]].plot(marker="o", ax=ax_n, color=solar_color, alpha=0.7, lw = 2, zorder = 10, label = "Produktion")
-(self_consumption.cumsum()/1e3).loc[production_monthly_sum.index[0:-1]].plot(ls="-", marker="o", ax=ax_n, color="gray", alpha=0.7, lw = 2, zorder = 5, label = "Egetforbrug")
+for year in production_monthly_sum_cums.keys():
 
-ax_n.fill_between(production_monthly_sum_cum.index[0:-1], 
-                  (self_consumption.cumsum()/1e3).loc[production_monthly_sum.index[0:-1]],
-                  (production_monthly_sum_cum/1e3).loc[production_monthly_sum.index[0:-1], "Produktion"],
-                  color="pink",
-                  alpha=0.3,
-                  label = "Eksport til net")
+    production_monthly_sum_y = production_monthly_sum.query(f"year == {year}").drop(columns=["year"]).set_index("month")
+
+    production_monthly_cum_sum_y = production_monthly_sum_cums[year]
+
+    (production_monthly_cum_sum_y["Produktion"]/1e3).plot(marker="o", 
+                                                          ax=ax_n, 
+                                                          color=colors[year], 
+                                                          alpha=0.7, 
+                                                          lw = 2, 
+                                                          zorder = 10, 
+                                                          label = year)
+   
+    self_consumption_ratio_index = production_monthly_sum_y.index.map(self_consumption_ratio)
+    self_consumption_y = production_monthly_sum_y["Produktion"] * self_consumption_ratio_index
+    self_consumption_cumsum_y = self_consumption_y.cumsum()
 
 # Daily production
 ax_i = fig.add_subplot(gs[1,:])
 ax_i.set_title(r"$\mathbf{Daglig}$" + " " + r"$\mathbf{produktion}$" + " (kWh)", color = "gray")
 df.plot(ax= ax_i, lw = 0, alpha=1, color = solar_color)
 ax_i.fill_between(df.index, 0, df["Produktion"], color=solar_color, alpha=0.3, zorder = 0)
-ax_i.set_ylim(0, ax_i.get_ylim()[1])
+ax_i.set_ylim(0, 650)
 
 # Avoided CO2 emissions
 capacity = 100 # kWp
@@ -691,7 +712,7 @@ panel_footprint = capacity * footprint / 1000 # tCO2
 
 ax_k = fig.add_subplot(gs[2,:])
 ax_k.set_title(r"$\mathbf{CO}_2$" + " " + r"$\mathbf{regnskab}$" + " (ton)", color = "gray") # CO2 udledninger undgået ved egenproduktion
-CO2_avoided = df_emissions_intensity * df["Produktion"]  
+CO2_avoided = (df_emissions_intensity * df["Produktion"]).fillna(0)    
 net_CO2 = panel_footprint - (CO2_avoided.cumsum()/1e6)
 
 remaining_emissions = net_CO2.dropna().iloc[-1]
@@ -712,10 +733,10 @@ ax_k.plot([df.index.max(), end_date], [net_CO2.dropna().iloc[-1], 0], color='gre
 ax_k.set_ylim(0, net_CO2.max()*1.2)
 
 ax_k.text(pd.to_datetime("2025-01-10"), panel_footprint*1.05, "Fabrik", fontsize=fs, color="gray")
-ax_k.text(pd.to_datetime("2029-11-01"), 0, "Break-even", fontsize=fs, color="gray")
-ax_k.text(pd.to_datetime("2027-01-01"), 12, "Hvis samme udvikling fortsætter", fontsize=fs, color="green", rotation=-7, alpha =0.5)
+ax_k.text(pd.to_datetime("2030-10-01"), 5, "Break-even", fontsize=fs, color="gray")
+ax_k.text(pd.to_datetime("2027-01-01"), 18, "Hvis samme udvikling fortsætter", fontsize=fs, color="green", rotation=-7, alpha =0.5)
 
-ax_k.set_xlim([df.index.min(), pd.to_datetime("2030-06-01")])
+ax_k.set_xlim([df.index.min(), pd.to_datetime("2031-06-01")])
 
 # Layout 
 for ax in [ax_m, ax_n, ax_i, ax_k]:
@@ -740,12 +761,10 @@ hatch_handle = plt.Rectangle((0,0),1,1, facecolor="white", edgecolor="k", hatch=
 handles.append(hatch_handle)
 labels.append("Egetforbrug")
 ax_m.legend(handles[-3:], labels[-3:], 
-            bbox_to_anchor=(0.02, 0.98), 
-            loc='upper left', 
+            bbox_to_anchor=(0.95, 0.98), 
+            loc='upper right', 
             borderaxespad=0., 
             prop = {'size': fs-2})
-ax_m.set_xticklabels(production_monthly_sum.index)
-ax_m.set_xlim(-1, len(production_monthly_sum.index)-0.5)
 
 # add copyright on bottom right of the figure
 fig.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)

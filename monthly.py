@@ -46,15 +46,25 @@ def extract_year(year_month):
 ############################# Monthly values ###########################################
 ########################################################################################
 # df comes in daily values, here we convert it to monthly values
-production_monthly_sum = df.groupby(df.index.month).sum() # sum of production per month
-production_monthly_mean = df.groupby(df.index.month).mean() # mean of production per month
+df["year"] = df.index.year
+df["month"] = df.index.month#.map(month_mapping)
 
-production_monthly_sum.index = production_monthly_sum.index.map(month_mapping)
-production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
+# df comes in daily values, here we convert it to monthly values
+production_monthly_sum = df.groupby([df.year, df.month]).sum() # sum of production per month
+production_monthly_mean = df.groupby([df.year, df.month]).mean() # mean of production per month
 
-production_monthly_sum_cum = production_monthly_sum.cumsum()
+production_monthly_sum.reset_index(inplace=True)
+production_monthly_sum["month"] = production_monthly_sum["month"].map(month_mapping)
+production_monthly_mean.reset_index(inplace=True)
+production_monthly_mean["month"] = production_monthly_mean["month"].map(month_mapping)
 
-production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production values
+# # production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
+
+production_monthly_sum_cums = {}
+for year in production_monthly_mean.year.unique():
+    production_monthly_sum_cums[year] = production_monthly_sum.query(f"year == {year}").drop(columns = ["year"]).set_index("month").cumsum()
+
+production_last_month = pd.concat(production_monthly_sum_cums).reset_index().iloc[-1]["Produktion"]  # get the last month production values
 
 with open("email_summary.txt", "w", newline="") as f:
     f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")

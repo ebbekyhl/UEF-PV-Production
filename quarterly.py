@@ -35,14 +35,28 @@ df["date"] = pd.to_datetime(df["date"])
 df.set_index("date", inplace=True, drop=True)
 
 # df comes in daily values, here we convert it to monthly values
-production_monthly_sum = df.groupby(df.index.month).sum() # sum of production per month
-production_monthly_mean = df.groupby(df.index.month).mean() # mean of production per month
+# df comes in daily values, here we convert it to monthly values
+df["year"] = df.index.year
+df["month"] = df.index.month#.map(month_mapping)
 
-production_monthly_sum.index = production_monthly_sum.index.map(month_mapping)
+# df comes in daily values, here we convert it to monthly values
+production_monthly_sum = df.groupby([df.year, df.month]).sum() # sum of production per month
+production_monthly_mean = df.groupby([df.year, df.month]).mean() # mean of production per month
 
-production_last_month = production_monthly_sum.iloc[-1].item()  # get the last month production values
-production_two_months_ago = production_monthly_sum.iloc[-2].item()  # get the production values for two months ago
-production_three_months_ago = production_monthly_sum.iloc[-3].item()  # get the production values for three months ago
+production_monthly_sum.reset_index(inplace=True)
+production_monthly_sum["month"] = production_monthly_sum["month"].map(month_mapping)
+production_monthly_mean.reset_index(inplace=True)
+production_monthly_mean["month"] = production_monthly_mean["month"].map(month_mapping)
+
+# # production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
+
+production_monthly_sum_cums = {}
+for year in production_monthly_mean.year.unique():
+    production_monthly_sum_cums[year] = production_monthly_sum.query(f"year == {year}").drop(columns = ["year"]).set_index("month").cumsum()
+
+production_last_month = pd.concat(production_monthly_sum_cums).reset_index().iloc[-1]["Produktion"]  # get the last month production values
+production_two_months_ago = pd.concat(production_monthly_sum_cums).reset_index().iloc[-2]["Produktion"]  # get the production values for two months ago
+production_three_months_ago = pd.concat(production_monthly_sum_cums).reset_index().iloc[-3]["Produktion"]  # get the production values for three months ago
 
 def format_number(number):
     formatted_number = f"{number:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
