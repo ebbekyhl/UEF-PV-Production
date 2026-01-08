@@ -1,31 +1,26 @@
 import os
 import pandas as pd
 import numpy as np
+from daily import get_year_months
 
 download_dir = os.path.abspath("data")  # choose where to save data
 
-month_mapping = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Maj",
-                    6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Okt",
-                    11: "Nov", 12: "Dec"}
+month_mapping = {-2: "Oct", -1: "Nov", 0: "Dec",
+                 1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "Maj",
+                 6: "Jun", 7: "Jul", 8: "Aug", 9: "Sep", 10: "Okt",
+                 11: "Nov", 12: "Dec"}
 
-month_mapping_long = {1: "Januar", 2: "Februar", 3: "Marts", 4: "April", 5: "Maj",
-                    6: "Juni", 7: "Juli", 8: "August", 9: "September", 10: "Oktober",
-                    11: "November", 12: "December"}
+month_mapping_long = {-2: "Oktober", -1: "November", 0: "December",
+                      1: "Januar", 2: "Februar", 3: "Marts", 4: "April", 5: "Maj",
+                      6: "Juni", 7: "Juli", 8: "August", 9: "September", 10: "Oktober",
+                      11: "November", 12: "December"}
 
 # Get the date of today
 today = pd.Timestamp.now()
-
 print("Today is the " + str(today.day) + " of " + month_mapping[today.month])
 print("Last month was " + month_mapping[today.month - 1])
 
-months = np.arange(1, today.month)
-year_earliest = 2025
-year_today = today.year
-year_months = [f"{year_today}-{month:02d}" for month in months]
-if year_earliest < year_today:
-    years = np.arange(year_earliest, year_today)
-    for year in years:
-        year_months += [f"{year}-{month:02d}" for month in np.arange(1, 13)]
+year_months = get_year_months(today)
 
 # read data for every months contained in "year_months"
 df = pd.concat([pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv", sep=";") for month in year_months])
