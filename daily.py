@@ -134,13 +134,20 @@ def get_values():
         # check if file exists in data already - if so, read it
         if f"data/inverter_data/{file}.csv" in existing_files:
             df_inv_hourly = pd.read_csv(f"data/inverter_data/{file}.csv", index_col=0, parse_dates=True)
-            df_inv = df_inv_hourly.resample("d").sum() 
-            inverter = file.split("_")[1]
-            month = df_inv.index[0].month
+            df_inv = df_inv_hourly.resample("d").sum()
             year = df_inv.index[0].year
-            ym = f"{year}-{month:02d}"
-            df_daily_production_inv[(inverter, ym)] = df_inv
-            continue
+            month = df_inv.index[0].month
+
+            # check if the length of df_inv matches the number of the days in that month
+            expected_days = pd.Period(f"{year}-{month:02d}").days_in_month
+            month_days_match = True if len(df_inv) == expected_days else False
+
+            # if match, we use the existing file
+            if month_days_match:
+                inverter = file.split("_")[1]
+                ym = f"{year}-{month:02d}"
+                df_daily_production_inv[(inverter, ym)] = df_inv
+                continue
 
         inverter = file.split("_")[1]
 
