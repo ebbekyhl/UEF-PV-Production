@@ -166,7 +166,7 @@ def get_values():
 
         # Saving file 
         print(f"Saving inverter data for inverter {inverter} for {ym}:")
-        df_hourly_production_inv.to_csv(download_dir + f"inverter_data/{file}.csv")
+        df_hourly_production_inv.to_csv(download_dir + f"/inverter_data/{file}.csv")
 
         df_daily_production_inv[(inverter, ym)] = df_hourly_production_inv.resample("d").sum() 
 
