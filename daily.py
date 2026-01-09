@@ -1030,15 +1030,35 @@ fig.savefig("figures/production_panel_4.png", bbox_inches='tight')
 ########################################################################################
 ############################# Save panels ##############################################
 ########################################################################################
-pngs = ["figures/production_panel_1.png",
-        "figures/production_panel_2.png", 
-        "figures/production_panel_3.png",
-        "figures/production_panel_4.png"
-        ]
+pngs_long = ["figures/production_panel_1.png",
+            "figures/production_panel_2.png", 
+            "figures/production_panel_3.png",
+            "figures/production_panel_4.png"
+            ]
+
+pngs_short = [
+            "figures/production_panel_2.png",
+            "figures/production_panel_1.png", 
+            ]
 
 # --- Make a PDF with those PNGs as pages ---
-with PdfPages("figures/UEF_rapport.pdf") as pdf:
-    for path in pngs:
+with PdfPages("figures/UEF_rapport_lang.pdf") as pdf:
+    for path in pngs_long:
+        img = mpimg.imread(path)
+        w,h = 3508, 2480 # A4 at 300dpi
+        dpi = 300
+
+        # create a figure at the right size with the correct dpi
+        fig_PDF = plt.figure(figsize = (w/dpi, h/dpi), dpi = dpi)
+        ax = plt.axes([0, 0, 1, 1])  # full-bleed
+        ax.imshow(img)
+        ax.axis("off")
+
+        pdf.savefig(fig_PDF)   # embeds the PNG raster on its own PDF page
+        plt.close(fig_PDF)
+
+with PdfPages("figures/UEF_rapport_kort.pdf") as pdf:
+    for path in pngs_short:
         img = mpimg.imread(path)
         w,h = 3508, 2480 # A4 at 300dpi
         dpi = 300
