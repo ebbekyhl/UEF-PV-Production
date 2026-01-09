@@ -227,9 +227,7 @@ production_monthly_sum["month"] = production_monthly_sum["month"].map(month_mapp
 production_monthly_mean.reset_index(inplace=True)
 production_monthly_mean["month"] = production_monthly_mean["month"].map(month_mapping)
 
-production_monthly_sum.to_csv(download_dir + "PV_monthly_production_full_period.csv")
-
-# # production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
+production_monthly_sum.to_csv(download_dir + "/PV_monthly_production_full_period.csv")
 
 production_monthly_sum_cums = {}
 for year in production_monthly_mean.year.unique():
@@ -833,7 +831,7 @@ def plot_daily_profile(ax,
 
    # plot last day in dataset
    days_back = 2 # two days back to avoid incomplete last day
-   df_pivot.iloc[:, -days_back].plot(ax=ax, lw=1, ls="--", color="orange", label="Seneste dag\n(" + str(df_pivot.columns[-days_back]) + ")")
+   df_pivot.iloc[:, -days_back].plot(ax=ax, lw=1, ls="--", color="orange", label="Eksempel \n(" + str(df_pivot.columns[-days_back]) + ")")
 
    if name == "":
       ax.set_title(r"$\mathbf{Intradag}$" + " " + r"$\mathbf{effektkurve}$" + " " + name +  " (kW)", color = "gray")
