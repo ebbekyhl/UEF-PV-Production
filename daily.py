@@ -71,19 +71,19 @@ pvgis = {"Jan": 895.7,
 
 # For now, assume the following self-consumptions:
 self_consumption_ratio = pd.Series({"Jan": 1,
-                          "Feb": 0.95,
-                          "Mar": 0.9,
-                          "Apr": 0.88,
-                            "Maj": 0.85,
-                            "Jun": 0.85,
-                            "Jul": 0.85,
-                            "Aug": 0.9,
-                            "Sep": 0.95,
-                            "Okt": 0.97,
-                            "Nov": 1,
-                            "Dec": 1
-                            } # read from plot by Parisa
-                            )
+                                    "Feb": 0.95,
+                                    "Mar": 0.90,
+                                    "Apr": 0.90,
+                                    "Maj": 0.84,
+                                    "Jun": 0.83,
+                                    "Jul": 0.85,
+                                    "Aug": 0.84,
+                                    "Sep": 0.92,
+                                    "Okt": 0.97,
+                                    "Nov": 1,
+                                    "Dec": 1
+                                    } # based on report provided by Zhe
+                                    )
 
 # plotting configuration
 fs = 14
@@ -159,7 +159,7 @@ def get_values():
 
         # Saving file 
         print(f"Saving inverter data for inverter {inverter} for {ym}:")
-        df_hourly_production_inv.to_csv(f"data/inverter_data/{file}.csv")
+        df_hourly_production_inv.to_csv(download_dir + f"inverter_data/{file}.csv")
 
         df_daily_production_inv[(inverter, ym)] = df_hourly_production_inv.resample("d").sum() 
 
@@ -226,6 +226,8 @@ production_monthly_sum.reset_index(inplace=True)
 production_monthly_sum["month"] = production_monthly_sum["month"].map(month_mapping)
 production_monthly_mean.reset_index(inplace=True)
 production_monthly_mean["month"] = production_monthly_mean["month"].map(month_mapping)
+
+production_monthly_sum.to_csv(download_dir + "PV_monthly_production_full_period.csv")
 
 # # production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
 
