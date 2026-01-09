@@ -24,39 +24,14 @@ print("And the month before that was " + month_mapping[today.month - 3])
 
 year_months = get_year_months(today)
 
-# read data for every months contained in "year_months"
-df = pd.concat([pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv", sep=";") for month in year_months])
-df.rename(columns={"Ep":"Produktion"}, inplace=True)
+########################################################################################
+############################# Data for the last quarter ################################
+########################################################################################
+df = pd.read_csv(download_dir + "/PV_monthly_production_full_period.csv")
 
-# convert "date" into pd.datetime
-df["date"] = pd.to_datetime(df["date"])
-
-# set "date" as index
-df.set_index("date", inplace=True, drop=True)
-
-# df comes in daily values, here we convert it to monthly values
-# df comes in daily values, here we convert it to monthly values
-df["year"] = df.index.year
-df["month"] = df.index.month#.map(month_mapping)
-
-# df comes in daily values, here we convert it to monthly values
-production_monthly_sum = df.groupby([df.year, df.month]).sum() # sum of production per month
-production_monthly_mean = df.groupby([df.year, df.month]).mean() # mean of production per month
-
-production_monthly_sum.reset_index(inplace=True)
-production_monthly_sum["month"] = production_monthly_sum["month"].map(month_mapping)
-production_monthly_mean.reset_index(inplace=True)
-production_monthly_mean["month"] = production_monthly_mean["month"].map(month_mapping)
-
-# # production_monthly_sum.columns = ["Produktion " + year_months[-1][0:4]]
-
-production_monthly_sum_cums = {}
-for year in production_monthly_mean.year.unique():
-    production_monthly_sum_cums[year] = production_monthly_sum.query(f"year == {year}").drop(columns = ["year"]).set_index("month").cumsum()
-
-production_last_month = pd.concat(production_monthly_sum_cums).reset_index().iloc[-1]["Produktion"]  # get the last month production values
-production_two_months_ago = pd.concat(production_monthly_sum_cums).reset_index().iloc[-2]["Produktion"]  # get the production values for two months ago
-production_three_months_ago = pd.concat(production_monthly_sum_cums).reset_index().iloc[-3]["Produktion"]  # get the production values for three months ago
+production_last_month = df.iloc[-2]["Produktion"]  # get last month's production values
+production_two_months_ago = df.iloc[-3]["Produktion"]  # get production values from two months ago
+production_three_months_ago = df.iloc[-4]["Produktion"]  # get production values from three months ago
 
 def format_number(number):
     formatted_number = f"{number:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -69,6 +44,6 @@ def extract_year(year_month):
     return year_month.split("-")[0]
 
 with open("email_summary.txt", "w", newline="") as f:
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-3])} {extract_year(year_months[-3])}: {format_number(production_three_months_ago)} kWh\r\n")
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-2])} {extract_year(year_months[-2])}: {format_number(production_two_months_ago)} kWh\r\n")
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-4])} {extract_year(year_months[-4])}: {format_number(production_three_months_ago)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-3])} {extract_year(year_months[-3])}: {format_number(production_two_months_ago)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-2])} {extract_year(year_months[-2])}: {format_number(production_last_month)} kWh\r\n")

@@ -220,23 +220,21 @@ df["month"] = df.index.month#.map(month_mapping)
 
 # df comes in daily values, here we convert it to monthly values
 production_monthly_sum = df.groupby([df.year, df.month]).sum() # sum of production per month
-production_monthly_mean = df.groupby([df.year, df.month]).mean() # mean of production per month
-
 production_monthly_sum.reset_index(inplace=True)
 production_monthly_sum["month"] = production_monthly_sum["month"].map(month_mapping)
-production_monthly_mean.reset_index(inplace=True)
-production_monthly_mean["month"] = production_monthly_mean["month"].map(month_mapping)
 
+###### If needed, manually correct certain months here ######
+manual_data = {("2025", "Nov"): 1273}
+for ym, value in manual_data.items():
+    production_monthly_sum.loc[(production_monthly_sum["year"] == int(ym[0])) & (production_monthly_sum["month"] == ym[1]), "Produktion"] = value
+
+# Then save the dataframe as a .csv file containing all months
 production_monthly_sum.to_csv(download_dir + "/PV_monthly_production_full_period.csv")
+############################################################
 
 production_monthly_sum_cums = {}
-for year in production_monthly_mean.year.unique():
+for year in production_monthly_sum.year.unique():
     production_monthly_sum_cums[year] = production_monthly_sum.query(f"year == {year}").drop(columns = ["year"]).set_index("month").cumsum()
-
-production_last_month = pd.concat(production_monthly_sum_cums).reset_index().iloc[-1]["Produktion"]  # get the last month production values
-
-with open("email_summary.txt", "w", newline="") as f:
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
 
 ########################################################################################
 ########################### Read grid data #############################################

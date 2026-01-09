@@ -25,16 +25,7 @@ year_months = get_year_months(today)
 ########################################################################################
 ############################# Monthly data #############################################
 ########################################################################################
-df = pd.read_csv(download_dir + "PV_monthly_production_full_period.csv")
-
-# convert "date" into pd.datetime
-df["date"] = pd.to_datetime(df["date"])
-
-# set "date" as index
-df.set_index("date", inplace=True, drop=True)
-
-# sort index
-df.sort_index(inplace=True)
+df = pd.read_csv(download_dir + "/PV_monthly_production_full_period.csv")
 
 def format_number(number):
     formatted_number = f"{number:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -46,7 +37,7 @@ def extract_month_name(year_month):
 def extract_year(year_month):
     return year_month.split("-")[0]
 
-production_last_month = df.iloc[-1]["Produktion"]  # get the last month production values
+production_last_month = df.iloc[-2]["Produktion"]  # get last month's production values
 
 with open("email_summary.txt", "w", newline="") as f:
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-1])}: {format_number(production_last_month)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-2])} {extract_year(year_months[-2])}: {format_number(production_last_month)} kWh\r\n")
