@@ -995,6 +995,11 @@ ax_t = ax.twinx()
 df_el_prices_pivot_q50.plot(ax=ax_t, color=red_color, lw=2, label="Elpris median (DKK/kWh)")
 ax_t.fill_between(df_el_prices_pivot_q50.index, df_el_prices_pivot_q25, df_el_prices_pivot_q75, color=red_color, alpha=0.1, lw=0, label="Elpris 25-75 percentil")
 
+# Add most recent day's electricity price profile as a red dashed line
+most_recent_date = df_el_prices_pivot.columns[-1]
+df_el_prices_most_recent = df_el_prices_pivot[most_recent_date]
+df_el_prices_most_recent.plot(ax=ax_t, color=red_color, lw=2, linestyle='--', label=f"Elpris seneste dag ({most_recent_date})")
+
 ax.set_xlim(0,23)
 
 # all properties of the ax_t should match the color of the line
