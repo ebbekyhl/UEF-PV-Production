@@ -334,7 +334,7 @@ g_prices["ElPriceDKK"] = spot_prices["DayAheadPriceDKK"] + spot_prices["transpor
 
 carriers = ['BioGas', 'Straw', 'Wood', 'FossilGas', 'Coal', 'Fossil Oil',
               'Waste', 'Hydro', 'Solar', 'WindOffshore', 'WindOnshore']
-date_time_series = pd.date_range(start=df_emissions.index.min(), end=df_emissions.index.max(), freq='H')
+date_time_series = pd.date_range(start=df_emissions.index.min(), end=df_emissions.index.max(), freq='h')
 df_emissions_carrier = pd.DataFrame(index = date_time_series)
 for carrier in carriers:
     index = df_emissions.query(f"ProductionType == '{carrier}'")["Production_MWh"].drop_duplicates().index
