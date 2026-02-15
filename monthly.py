@@ -40,4 +40,4 @@ def extract_year(year_month):
 production_last_month = df.iloc[-2]["Produktion"]  # get last month's production values
 
 with open("email_summary.txt", "w", newline="") as f:
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-2])}: {format_number(production_last_month)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-2])} {extract_year(year_months[-2])}: {format_number(production_last_month)} kWh\r\n")
