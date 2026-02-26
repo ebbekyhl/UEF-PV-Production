@@ -44,6 +44,6 @@ def extract_year(year_month):
     return year_month.split("-")[0]
 
 with open("email_summary.txt", "w", newline="") as f:
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-3])} {extract_year(year_months[-4])}: {format_number(production_three_months_ago)} kWh\r\n")
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-2])} {extract_year(year_months[-3])}: {format_number(production_two_months_ago)} kWh\r\n")
-    f.write(f"Samlet produktion for {extract_month_name(year_months[-1])} {extract_year(year_months[-2])}: {format_number(production_last_month)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-4])} {extract_year(year_months[-4])}: {format_number(production_three_months_ago)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-3])} {extract_year(year_months[-3])}: {format_number(production_two_months_ago)} kWh\r\n")
+    f.write(f"Samlet produktion for {extract_month_name(year_months[-2])} {extract_year(year_months[-2])}: {format_number(production_last_month)} kWh\r\n")

@@ -30,11 +30,12 @@ def get_year_months(today):
     months = np.arange(1, today.month+1)
     year_earliest = 2025
     year_today = today.year
-    year_months = [f"{year_today}-{month:02d}" for month in months]
+    year_months = []
     if year_earliest < year_today:
         years = np.arange(year_earliest, year_today)
         for year in years:
             year_months += [f"{year}-{month:02d}" for month in np.arange(1, 13)]
+    year_months += [f"{year_today}-{month:02d}" for month in months]
     
     return year_months
 
