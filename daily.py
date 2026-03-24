@@ -39,14 +39,13 @@ def get_year_months(today):
     return year_months
 
 year_months = get_year_months(today)
+year_months.sort(key=lambda x: (int(x.split("-")[0]), int(x.split("-")[1])))
 
 # list the files that are already downloaded 
 existing_files = os.listdir(download_dir)
 
 # missing files 
 year_months_downloads = [ym for ym in year_months if f"PV_production_Aarhus_{ym}.csv" not in existing_files]
-
-year_months_downloads.sort(key=lambda x: (int(x.split("-")[0]), int(x.split("-")[1])))
 
 print(year_months_downloads)
 
