@@ -46,6 +46,8 @@ existing_files = os.listdir(download_dir)
 # missing files 
 year_months_downloads = [ym for ym in year_months if f"PV_production_Aarhus_{ym}.csv" not in existing_files]
 
+year_months_downloads.sort(key=lambda x: (int(x.split("-")[0]), int(x.split("-")[1])))
+
 print(year_months_downloads)
 
 # always include the latest month in "year_months_downloads"
