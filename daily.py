@@ -7,7 +7,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.image as mpimg
 import requests
 
-use_inverter_data = True # whether to use inverter data if available
+use_inverter_data = False # whether to use inverter data if available
 match_el_prices_w_inverter_data = False
 
 download_dir = os.path.abspath("data")  # choose where to save data
