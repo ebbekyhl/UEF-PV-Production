@@ -747,8 +747,7 @@ ax_m.bar(production_monthly_sum_plot.index, self_consumption / 1e3,
          color=solar_color,
          edgecolor="k",
          hatch="/",
-         alpha=0.7,
-         label = "Produktion")
+         alpha=0.7)
 
 # list of colors 
 colors = {2025: "#feb24c",  2026: "#fc4e2a", 2027: "#bd0026",  2028: "#3182bd"}
@@ -1104,17 +1103,131 @@ fig.text(0.43, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right
 fig.savefig("figures/production_panel_4.png", bbox_inches='tight')
 
 ########################################################################################
+########################################################################################
+########################################################################################
+fig_short = plt.figure(figsize=(10*aspect_ratio,7))
+gs = fig_short.add_gridspec(3, 2, height_ratios=[1.8,
+                                           0.4,
+                                           0.4
+                                           ]) 
+
+# add space between subfigures
+gs.update(hspace=0.4, wspace=0.15)
+
+ax_m = fig_short.add_subplot(gs[0,0])
+ax_m.set_title(r"$\mathbf{Månedlige}$" + " " + r"$\mathbf{produktionsværdier}$" + " (MWh)", color = "gray")
+
+ax_n = fig_short.add_subplot(gs[0,1])
+ax_n.set_title(r"$\mathbf{Kumuleret}$" + " " + r"$\mathbf{produktion}$" + " (MWh)", color = "gray")
+
+# bar plot of monthly production
+production_monthly_sum_plot = production_monthly_sum.iloc[0:-1].copy()
+production_monthly_sum_plot["date"] = pd.to_datetime(production_monthly_sum_plot["year"].astype(str) + "-" + production_monthly_sum_plot["month"].map(month_mapping_rev).astype(str) + "-01")
+production_monthly_sum_plot["pvgis"] = production_monthly_sum_plot["month"].map(pvgis)
+production_monthly_sum_plot["self-consumption"] = production_monthly_sum_plot[["month", "year"]].apply(tuple, axis=1).map(self_consumption_ratio)
+production_monthly_sum_plot.set_index("date", inplace=True)
+production_monthly_sum_plot.drop(columns=["year", "month"], inplace=True)
+
+(production_monthly_sum_plot["pvgis"] / 1e3).plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
+
+ax_m.bar(production_monthly_sum_plot.index, production_monthly_sum_plot["Produktion"] / 1e3, 
+         width = 0.7, 
+         color=solar_color,
+         edgecolor="k",
+         alpha=0.7,
+         label = "Produktion")
+
+self_consumption = production_monthly_sum_plot["self-consumption"] * production_monthly_sum_plot["Produktion"]
+ax_m.bar(production_monthly_sum_plot.index, self_consumption / 1e3, 
+         width = 0.7, 
+         color=solar_color,
+         edgecolor="k",
+         hatch="/",
+         alpha=0.7)
+
+# list of colors 
+colors = {2025: "#feb24c",  2026: "#fc4e2a", 2027: "#bd0026",  2028: "#3182bd"}
+
+# cumulative sum of monthly production
+for year in production_monthly_sum_cums.keys():
+
+    production_monthly_sum_y = production_monthly_sum.query(f"year == {year}").drop(columns=["year"]).set_index("month")
+
+    production_monthly_cum_sum_y = production_monthly_sum_cums[year]
+
+    if year == 2026:
+        production_monthly_cum_sum_y = production_monthly_cum_sum_y.iloc[0:-1]
+    
+    if year == list(production_monthly_sum_cums.keys())[0]:
+        expected_values = production_monthly_sum.month.map(pvgis).iloc[0:12]
+        expected_values.index = production_monthly_sum_y.index
+        expected_values_cum_sum = expected_values.cumsum() / 1e3
+
+        expected_values_cum_sum.plot(marker="X", 
+                                    ls="--", 
+                                    color="k", 
+                                    alpha=0.6, 
+                                    label="Forventet", 
+                                    ax=ax_n)
+        
+    (production_monthly_cum_sum_y["Produktion"]/1e3).plot(marker="o", 
+                                                          ax=ax_n, 
+                                                          color=colors[year], 
+                                                          alpha=0.7, 
+                                                          lw = 2, 
+                                                          zorder = 10, 
+                                                          label = year)
+   
+    self_consumption_ratio_index = production_monthly_sum_y.index.map(self_consumption_ratio)
+    self_consumption_y = production_monthly_sum_y["Produktion"] * self_consumption_ratio_index
+    self_consumption_cumsum_y = self_consumption_y.cumsum()
+
+# Layout 
+for ax in [ax_m, ax_n]:
+    # hide upper and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.grid(lw = 0.5, ls='--', color='gray', alpha=0.7)
+    ax.legend(loc = "best", prop = {'size': fs-2})
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha='center')
+    ax.set_ylabel("")
+    ax.set_xlabel("")
+
+ax_m.set_xlim([production_monthly_sum_plot.index.min() - pd.Timedelta(days=10), 
+               production_monthly_sum_plot.index.max() + pd.Timedelta(days=60)])
+
+ax_m.legend().set_visible(False)
+
+# add hatch to legend in ax_m
+handles, labels = ax_m.get_legend_handles_labels()
+hatch_handle = plt.Rectangle((0,0),1,1, facecolor="white", edgecolor="k", hatch="//", alpha=0.4)
+handles.append(hatch_handle)
+labels.append("Egetforbrug")
+ax_m.legend(handles[-3:], labels[-3:], 
+            bbox_to_anchor=(0.95, 0.98), 
+            loc='upper right', 
+            borderaxespad=0., 
+            prop = {'size': fs-2})
+
+# add copyright on bottom right of the figure
+fig_short.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+fig_short.savefig("figures/production_panel_short.png", bbox_inches='tight')
+
+
+########################################################################################
 ############################# Save panels ##############################################
 ########################################################################################
 pngs_long = ["figures/production_panel_1.png",
             "figures/production_panel_2.png", 
             "figures/production_panel_3.png",
-            "figures/production_panel_4.png"
+            "figures/production_panel_4.png",
+#             "figures/production_panel_short.png",
             ]
 
 pngs_short = [
-            "figures/production_panel_2.png",
-            "figures/production_panel_1.png", 
+            "figures/production_panel_short.png",
+            #"figures/production_panel_2.png",
+            #"figures/production_panel_1.png", 
             ]
 
 # --- Make a PDF with those PNGs as pages ---
