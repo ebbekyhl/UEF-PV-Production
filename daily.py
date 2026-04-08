@@ -21,6 +21,8 @@ month_mapping_long = {-2: "Oktober", -1: "November", 0: "December",
                       6: "Juni", 7: "Juli", 8: "August", 9: "September", 10: "Oktober",
                       11: "November", 12: "December"}
 
+month_mapping_rev = {v: k for k, v in list(month_mapping.items())[3:]}
+
 # Get the date of today
 today = pd.Timestamp.now()
 print("Today is the " + str(today.day) + " of " + month_mapping[today.month])
@@ -70,20 +72,23 @@ pvgis = {"Jan": 895.7,
         "Nov": 1108.7,
         "Dec": 562.9}
 
-# For now, assume the following self-consumptions:
-self_consumption_ratio = pd.Series({"Jan": 1,
-                                    "Feb": 0.95,
-                                    "Mar": 0.90,
-                                    "Apr": 0.90,
-                                    "Maj": 0.84,
-                                    "Jun": 0.83,
-                                    "Jul": 0.85,
-                                    "Aug": 0.84,
-                                    "Sep": 0.92,
-                                    "Okt": 0.97,
-                                    "Nov": 1,
-                                    "Dec": 1
-                                    } # based on report provided by Zhe
+self_consumption_ratio = pd.Series({
+                                    ("Jan", 2025): 1,
+                                    ("Feb", 2025): 0.95,
+                                    ("Mar", 2025): 0.90,
+                                    ("Apr", 2025): 0.90,
+                                    ("Maj", 2025): 0.84,
+                                    ("Jun", 2025): 0.83,
+                                    ("Jul", 2025): 0.85,
+                                    ("Aug", 2025): 0.84,
+                                    ("Sep", 2025): 0.92,
+                                    ("Okt", 2025): 0.97,
+                                    ("Nov", 2025): 1,
+                                    ("Dec", 2025): 1,
+                                    ("Jan", 2026): 1,
+                                    ("Feb", 2026): 1,
+                                    ("Mar", 2026): 0.94,
+                                    } # based on reporting by Zhe
                                     )
 
 # plotting configuration
@@ -232,7 +237,10 @@ production_monthly_sum.reset_index(inplace=True)
 production_monthly_sum["month"] = production_monthly_sum["month"].map(month_mapping)
 
 ###### If needed, manually correct certain months here ######
-manual_data = {("2025", "Nov"): 1273}
+manual_data = {("2025", "Nov"): 1273,
+               ("2026", "Jan"): 541,
+               ("2026", "Feb"): 697,
+               ("2026", "Mar"): 5943}
 for ym, value in manual_data.items():
     production_monthly_sum.loc[(production_monthly_sum["year"] == int(ym[0])) & (production_monthly_sum["month"] == ym[1]), "Produktion"] = value
 
@@ -669,18 +677,29 @@ ax_n = fig.add_subplot(gs[0,1])
 ax_n.set_title(r"$\mathbf{Kumuleret}$" + " " + r"$\mathbf{produktion}$" + " (MWh)", color = "gray")
 
 # bar plot of monthly production
-(production_monthly_sum.drop(columns=["year","month"])/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.7, edgecolor="k", width=0.7, label = "Produktion")
-self_consumption_ratio_index = production_monthly_sum["month"].map(self_consumption_ratio)
-self_consumption = production_monthly_sum.drop(columns=["year","month"])["Produktion"]*self_consumption_ratio_index
-(self_consumption/1e3).plot(kind="bar", ax=ax_m, color=solar_color, alpha=0.4, 
-                            edgecolor="k", 
-                            hatch="/",
-                            width=0.7)
-# add expected production from simulation
-(pd.Series(pvgis)/1e3).plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
+production_monthly_sum["date"] = pd.to_datetime(production_monthly_sum["year"].astype(str) + "-" + production_monthly_sum["month"].map(month_mapping_rev).astype(str) + "-01")
+production_monthly_sum["pvgis"] = production_monthly_sum["month"].map(pvgis)
+production_monthly_sum["self-consumption"] = production_monthly_sum[["month", "year"]].apply(tuple, axis=1).map(self_consumption_ratio)
+production_monthly_sum.set_index("date", inplace=True)
+production_monthly_sum.drop(columns=["year", "month"], inplace=True)
 
-# add expected production from simulation
-(pd.Series(pvgis).cumsum()/1e3).plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_n)
+(production_monthly_sum["pvgis"] / 1e3).plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
+
+ax_m.bar(production_monthly_sum.index, production_monthly_sum["Produktion"] / 1e3, 
+         width = 0.7, 
+         color=solar_color,
+         edgecolor="k",
+         alpha=0.7,
+         label = "Produktion")
+
+self_consumption = production_monthly_sum["self-consumption"] * production_monthly_sum["Produktion"]
+ax_m.bar(production_monthly_sum.index, self_consumption / 1e3, 
+         width = 0.7, 
+         color=solar_color,
+         edgecolor="k",
+         hatch="/",
+         alpha=0.7,
+         label = "Produktion")
 
 # list of colors 
 colors = {2025: "#feb24c",  2026: "#fc4e2a", 2027: "#bd0026",  2028: "#3182bd"}
