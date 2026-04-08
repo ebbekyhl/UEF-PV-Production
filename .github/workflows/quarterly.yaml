@@ -57,9 +57,9 @@ jobs:
           body: |
             Kære UEF medlemmer
 
-            Som noget nyt sender vi hvert kvartal en oversigt ud til jer med den samlede elproduktion fra vores fælles solcelleanlæg for de sidste tre måneder.
+            Her følger en oversigt over elproduktionen fra vores fælles solcelleanlæg for de sidste tre måneder.
 
-            Se vedhæftet figur for denne oversigt. 
+            Se vedhæftet PDF for denne oversigt. 
 
             ${{ steps.email.outputs.summary }}
 
