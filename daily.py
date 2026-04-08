@@ -199,7 +199,7 @@ days_of_month = {1: 31,
 
 for month in year_months:
   try:
-    df_ym = pd.read_csv(f"PV_production_Aarhus_{month}.csv", sep=";") 
+    df_ym = pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv", sep=";") 
   
   except:
     leap_year = (int(month[0:4]) % 4 == 0 and int(month[0:4]) % 100 != 0) or (int(month[0:4]) % 400 == 0)
