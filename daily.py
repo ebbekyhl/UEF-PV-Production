@@ -55,8 +55,12 @@ print(year_months_downloads)
 if year_months[-1] not in year_months_downloads:
     year_months_downloads.append(year_months[-1])
 
-for year_month_download in year_months_downloads:
-    download.download_pv_data(year_month_download,download_dir)
+# These lines of code refer to the AURORA dashboard from which most recent data (if available) is acquired 
+# Currently (as of 8th of April 2026), the AURORA dashboard has not been providing new data for more than a month, 
+# which is why we pause this process.
+
+# for year_month_download in year_months_downloads:
+#    download.download_pv_data(year_month_download,download_dir)
 
 # For comparison, we show the expected production from simulation:
 pvgis = {"Jan": 895.7,
