@@ -197,11 +197,14 @@ days_of_month = {1: 31,
                 11: 30,
                 12: 31}
 
+print(year_months)
 for month in year_months:
   try:
     df_ym = pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv", sep=";") 
+    print("successfully read files for ", month)
   
   except:
+    print(month, " not in repository")
     leap_year = (int(month[0:4]) % 4 == 0 and int(month[0:4]) % 100 != 0) or (int(month[0:4]) % 400 == 0)
     february = int(month[-2:]) == 2
     date_range_end = f"{month}-{days_of_month[int(month[-2:])]}" if not (leap_year and february) else f"{month}-29"
