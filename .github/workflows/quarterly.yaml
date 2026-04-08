@@ -72,8 +72,8 @@ jobs:
             Med solrige hilsener
             UEF
 
-          to: ${{ secrets.EMAIL_TO_MONTHLY }}
-          bcc: ${{ secrets.EMAIL_BCC_MONTHLY }}
+          to: ${{ secrets.EMAIL_TO_QUARTERLY }}
+          bcc: ${{ secrets.EMAIL_BCC_ALL }}
           from: ${{ secrets.EMAIL_USERNAME }}
           secure: true
           attachments: ${{ steps.latest_figure.outputs.file }}
