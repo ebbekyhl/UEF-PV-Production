@@ -38,6 +38,8 @@ def get_year_months(today):
         years = np.arange(year_earliest, year_today)
         for year in years:
             year_months += [f"{year}-{month:02d}" for month in np.arange(1, 13)]
+
+    year_months = list(pd.Series(year_months).sort_values().values)
     
     return year_months
 
