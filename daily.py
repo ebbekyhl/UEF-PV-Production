@@ -210,7 +210,7 @@ for month in year_months:
                                               inclusive="both",
                                               freq="D"), 
                          columns=["Ep"])
-    df_ym.loc[:, "Ep"] = 0
+    
     df_ym = df_ym.reset_index().rename(columns={"index": "date"})
     df_ym["date"] = df_ym["date"].astype(str)
 
