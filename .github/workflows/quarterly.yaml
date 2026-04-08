@@ -59,9 +59,9 @@ jobs:
 
             Her følger en oversigt over elproduktionen fra vores fælles solcelleanlæg for de sidste tre måneder.
 
-            Se vedhæftet PDF for denne oversigt. 
-
             ${{ steps.email.outputs.summary }}
+
+            Se vedhæftet PDF for en grafisk repræsentation af denne oversigt. 
 
             Du kan selvfølgelig stadig følge med i produktionen ved at tilgå vores hjemmeside: https://www.uef.dk/installation-and-production
 
