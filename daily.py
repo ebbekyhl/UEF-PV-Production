@@ -725,23 +725,24 @@ ax_n = fig.add_subplot(gs[0,1])
 ax_n.set_title(r"$\mathbf{Kumuleret}$" + " " + r"$\mathbf{produktion}$" + " (MWh)", color = "gray")
 
 # bar plot of monthly production
-production_monthly_sum["date"] = pd.to_datetime(production_monthly_sum["year"].astype(str) + "-" + production_monthly_sum["month"].map(month_mapping_rev).astype(str) + "-01")
-production_monthly_sum["pvgis"] = production_monthly_sum["month"].map(pvgis)
-production_monthly_sum["self-consumption"] = production_monthly_sum[["month", "year"]].apply(tuple, axis=1).map(self_consumption_ratio)
-production_monthly_sum.set_index("date", inplace=True)
-production_monthly_sum.drop(columns=["year", "month"], inplace=True)
+production_monthly_sum_plot = production_monthly_sum.copy()
+production_monthly_sum_plot["date"] = pd.to_datetime(production_monthly_sum_plot["year"].astype(str) + "-" + production_monthly_sum_plot["month"].map(month_mapping_rev).astype(str) + "-01")
+production_monthly_sum_plot["pvgis"] = production_monthly_sum_plot["month"].map(pvgis)
+production_monthly_sum_plot["self-consumption"] = production_monthly_sum_plot[["month", "year"]].apply(tuple, axis=1).map(self_consumption_ratio)
+production_monthly_sum_plot.set_index("date", inplace=True)
+production_monthly_sum_plot.drop(columns=["year", "month"], inplace=True)
 
 (production_monthly_sum["pvgis"] / 1e3).plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
 
-ax_m.bar(production_monthly_sum.index, production_monthly_sum["Produktion"] / 1e3, 
+ax_m.bar(production_monthly_sum_plot.index, production_monthly_sum_plot["Produktion"] / 1e3, 
          width = 0.7, 
          color=solar_color,
          edgecolor="k",
          alpha=0.7,
          label = "Produktion")
 
-self_consumption = production_monthly_sum["self-consumption"] * production_monthly_sum["Produktion"]
-ax_m.bar(production_monthly_sum.index, self_consumption / 1e3, 
+self_consumption = production_monthly_sum_plot["self-consumption"] * production_monthly_sum_plot["Produktion"]
+ax_m.bar(production_monthly_sum_plot.index, self_consumption / 1e3, 
          width = 0.7, 
          color=solar_color,
          edgecolor="k",
