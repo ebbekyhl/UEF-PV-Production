@@ -183,7 +183,42 @@ def get_values():
     return df_daily_production_inv
 
 # read data for every months contained in "year_months"
-df = pd.concat([pd.read_csv(download_dir + f"/PV_production_Aarhus_{month}.csv", sep=";") for month in year_months])
+days_of_month = {1: 31,
+                2: 28, 
+                3: 31,
+                4: 30,
+                5: 31,
+                6: 30,
+                7: 31,
+                8: 31,
+                9: 30,
+                10: 31,
+                11: 30,
+                12: 31}
+
+for month in year_months:
+  try:
+    df_ym = pd.read_csv(f"PV_production_Aarhus_{month}.csv", sep=";") 
+  
+  except:
+    leap_year = (int(month[0:4]) % 4 == 0 and int(month[0:4]) % 100 != 0) or (int(month[0:4]) % 400 == 0)
+    february = int(month[-2:]) == 2
+    date_range_end = f"{month}-{days_of_month[int(month[-2:])]}" if not (leap_year and february) else f"{month}-29"
+    df_ym = pd.DataFrame(index = pd.date_range(
+                                              start=f"{month}-01", 
+                                              end=date_range_end, 
+                                              inclusive="both",
+                                              freq="D"), 
+                         columns=["Ep"])
+    df_ym.loc[:, "Ep"] = 0
+    df_ym = df_ym.reset_index().rename(columns={"index": "date"})
+    df_ym["date"] = df_ym["date"].astype(str)
+
+  if month == year_months[0]:
+    df = df_ym
+  else:
+    df = pd.concat([df, df_ym])
+  
 df.rename(columns={"Ep":"Produktion"}, inplace=True)
 # convert "date" into pd.datetime
 df["date"] = pd.to_datetime(df["date"])
