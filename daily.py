@@ -8,6 +8,7 @@ import matplotlib.image as mpimg
 import requests
 
 use_inverter_data = True # whether to use inverter data if available
+match_el_prices_w_inverter_data = False
 
 download_dir = os.path.abspath("data")  # choose where to save data
 
@@ -608,58 +609,59 @@ df_hourly['hour'] = df_hourly.index.hour
 df_el_neg_prices_pivot = df_hourly.pivot_table(values='DayAheadPriceDKK', index='hour', columns='date')
 
 # match columns of df_el_neg_prices_pivot (price data) and df_pivot (yield data)
-common_columns = df_el_neg_prices_pivot.columns.intersection(df_pivot.columns)
-df_el_neg_prices_pivot = df_el_neg_prices_pivot[common_columns]
-df_pivot = df_pivot[common_columns]
-
-min_threshold_price = -0.02 # DKK/kWh
-min_threshold_PV_yield = 50 # kWh
-count_hours = 0
-yield_at_negative_price = 0
-for col in df_el_neg_prices_pivot.columns:
-    df_plot = df_el_neg_prices_pivot[col]
-
-    condition_1 = len(df_plot[df_plot < 0]) > 0 # check if any negative prices exist
-    condition_2 = df_pivot[col].sum() > min_threshold_PV_yield # check if total energy production of the considered day is greater than 50 kWh
-    condition_3 = df_plot.min() < min_threshold_price # check if there are prices below -0.02 DKK/kWh
-
-    if condition_1 and condition_2 and condition_3:  # check if any coincidental negative prices occur
-
-        # create boolean variable to track coincidental negative prices (i.e., PV yield in parallel with negative prices)
-        df_bool = df_plot.copy()
-        df_bool[df_bool >= min_threshold_price] = 0
-        df_bool[df_bool < min_threshold_price] = 1
-
-        # count hours where df_bool is greater than 0
-        index_relevant = df_bool[df_bool > 0].index
-        count_hours += len(index_relevant)
-        yield_at_negative_price += df_pivot[col].loc[index_relevant].sum()
-
-self_consumption_rate = 0.8
-magnitude_negative_price_high = 0.2 # DKK/kWh (high assumption)
-magnitude_negative_price_low = 0.1 # DKK/kWh (low assumption)
-costs_high = yield_at_negative_price * (1-self_consumption_rate) * magnitude_negative_price_high
-costs_low = yield_at_negative_price * (1-self_consumption_rate) * magnitude_negative_price_low
-print(f"Number of hours with coincidental negative prices: {count_hours} hours")
-print(f"Total energy yield during negative price hours: {yield_at_negative_price:.2f} kWh")
-
-def format_number(number):
-    formatted_number = f"{number:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    return formatted_number
-
-annualize = 365 / (g_prices.index.max().date() - g_prices.index.min().date()).days
-ax[2].annotate(r"$\mathbf{Negative}$" + " " + r"$\mathbf{elpriser}$" 
-               + f":\n{count_hours} timer under elproduktion ({format_number(yield_at_negative_price)} kWh)" 
-               + r"$\approx$" + f"{format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_low*annualize)}" 
-               + f" - {format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_high*annualize)} DKK pr. år.",
-               xy=(0.36, 0.01),
-               xycoords='figure fraction',
-               bbox=dict(boxstyle="round,pad=0.3", edgecolor="gray", facecolor=red_color, alpha=0.2),
-               ha='left',
-               fontsize=fs-2,
-               color= "k",
-               alpha=0.8
-               )
+if match_el_prices_w_inverter_data:
+  common_columns = df_el_neg_prices_pivot.columns.intersection(df_pivot.columns)
+  df_el_neg_prices_pivot = df_el_neg_prices_pivot[common_columns]
+  df_pivot = df_pivot[common_columns]
+  
+  min_threshold_price = -0.02 # DKK/kWh
+  min_threshold_PV_yield = 50 # kWh
+  count_hours = 0
+  yield_at_negative_price = 0
+  for col in df_el_neg_prices_pivot.columns:
+      df_plot = df_el_neg_prices_pivot[col]
+  
+      condition_1 = len(df_plot[df_plot < 0]) > 0 # check if any negative prices exist
+      condition_2 = df_pivot[col].sum() > min_threshold_PV_yield # check if total energy production of the considered day is greater than 50 kWh
+      condition_3 = df_plot.min() < min_threshold_price # check if there are prices below -0.02 DKK/kWh
+  
+      if condition_1 and condition_2 and condition_3:  # check if any coincidental negative prices occur
+  
+          # create boolean variable to track coincidental negative prices (i.e., PV yield in parallel with negative prices)
+          df_bool = df_plot.copy()
+          df_bool[df_bool >= min_threshold_price] = 0
+          df_bool[df_bool < min_threshold_price] = 1
+  
+          # count hours where df_bool is greater than 0
+          index_relevant = df_bool[df_bool > 0].index
+          count_hours += len(index_relevant)
+          yield_at_negative_price += df_pivot[col].loc[index_relevant].sum()
+  
+  self_consumption_rate = 0.8
+  magnitude_negative_price_high = 0.2 # DKK/kWh (high assumption)
+  magnitude_negative_price_low = 0.1 # DKK/kWh (low assumption)
+  costs_high = yield_at_negative_price * (1-self_consumption_rate) * magnitude_negative_price_high
+  costs_low = yield_at_negative_price * (1-self_consumption_rate) * magnitude_negative_price_low
+  print(f"Number of hours with coincidental negative prices: {count_hours} hours")
+  print(f"Total energy yield during negative price hours: {yield_at_negative_price:.2f} kWh")
+  
+  def format_number(number):
+      formatted_number = f"{number:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+      return formatted_number
+  
+  annualize = 365 / (g_prices.index.max().date() - g_prices.index.min().date()).days
+  ax[2].annotate(r"$\mathbf{Negative}$" + " " + r"$\mathbf{elpriser}$" 
+                 + f":\n{count_hours} timer under elproduktion ({format_number(yield_at_negative_price)} kWh)" 
+                 + r"$\approx$" + f"{format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_low*annualize)}" 
+                 + f" - {format_number(yield_at_negative_price*(1 - self_consumption_rate)*magnitude_negative_price_high*annualize)} DKK pr. år.",
+                 xy=(0.36, 0.01),
+                 xycoords='figure fraction',
+                 bbox=dict(boxstyle="round,pad=0.3", edgecolor="gray", facecolor=red_color, alpha=0.2),
+                 ha='left',
+                 fontsize=fs-2,
+                 color= "k",
+                 alpha=0.8
+                 )
 ###########################################################
 
 ax[2].set_ylim([-0.7, g_prices["ElPriceDKK"].max()*1.1])
