@@ -217,6 +217,7 @@ for month in year_months:
     
     df_ym = df_ym.reset_index().rename(columns={"index": "date"})
     df_ym["date"] = df_ym["date"].astype(str)
+    df_ym["Ep"] = df_ym["Ep"].astype(float)
 
   if month == year_months[0]:
     df = df_ym
