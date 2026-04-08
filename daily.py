@@ -231,6 +231,7 @@ df["date"] = pd.to_datetime(df["date"])
 df.set_index("date", inplace=True, drop=True)
 
 # make a copy of df
+df.to_csv(download_dir + "/compiled_data.csv")
 df_copy = df.copy()
 
 ###########################################################################################
