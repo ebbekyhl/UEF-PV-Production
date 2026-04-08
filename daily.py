@@ -512,6 +512,7 @@ shares = df_emissions_carrier.sum()/(df_emissions_carrier.sum().sum())*100
 df_emissions_carrier = df_emissions_carrier[shares[shares > 0.1].index]
 
 # plot area chart of daily production by carrier in GWh
+df_emissions_carrier = df_emissions_carrier.clip(0)
 (df_emissions_carrier.resample("d").sum()/1e3).rename(columns=names).plot.area(stacked=True, 
                                                                                linewidth = 0, 
                                                                                color = [colors[col] for col in df_emissions_carrier.columns], ax=ax[0])
