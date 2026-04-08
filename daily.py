@@ -732,7 +732,7 @@ production_monthly_sum_plot["self-consumption"] = production_monthly_sum_plot[["
 production_monthly_sum_plot.set_index("date", inplace=True)
 production_monthly_sum_plot.drop(columns=["year", "month"], inplace=True)
 
-(production_monthly_sum["pvgis"] / 1e3).plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
+(production_monthly_sum_plot["pvgis"] / 1e3).plot(marker="X", ls="--", color="k", alpha=0.6, label="Forventet", ax=ax_m)
 
 ax_m.bar(production_monthly_sum_plot.index, production_monthly_sum_plot["Produktion"] / 1e3, 
          width = 0.7, 
