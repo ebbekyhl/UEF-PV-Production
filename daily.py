@@ -1093,9 +1093,7 @@ for ax_i in [ax, ax_t]:
     xticks = ax_i.get_xticks()
     ax_i.set_xticklabels([f"{i}:00" if i % 3 == 0 else "" for i in xticks], rotation=30, fontsize = fs - 2)
 
-ax.legend(loc='best', 
-          prop = {'size': fs}, 
-          labelcolor="gray")
+fig.legend(bbox_to_anchor=(0.13, 0.65), loc='lower left', borderaxespad=0., prop = {'size': fs}, labelcolor="gray")
 
 mloc = plt.MultipleLocator(1)
 ax.xaxis.set_major_locator(mloc)
