@@ -766,18 +766,18 @@ for year in production_monthly_sum_cums.keys():
                                                           zorder = 10, 
                                                           label = year)
 
-    expected_values = production_monthly_sum.month.map(pvgis).iloc[0:12]
-    expected_values.index = production_monthly_sum_y.index
-    expected_values_cum_sum = expected_values.cumsum() / 1e3
-
-    expected_values_cum_sum.plot(marker="X", 
-                                 ls="--", 
-                                 color="k", 
-                                 alpha=0.6, 
-                                 label="Forventet", 
-                                 zorder = 0,
-                                 ax=ax_n)
-   
+    if year == list(production_monthly_sum_cums.keys())[0]:
+        expected_values = production_monthly_sum.month.map(pvgis).iloc[0:12]
+        expected_values.index = production_monthly_sum_y.index
+        expected_values_cum_sum = expected_values.cumsum() / 1e3
+        expected_values_cum_sum.plot(marker="X", 
+                                     ls="--", 
+                                     color="k", 
+                                     alpha=0.6, 
+                                     label="Forventet", 
+                                     zorder = 0,
+                                     ax=ax_n)
+     
     self_consumption_ratio_index = production_monthly_sum_y.index.map(self_consumption_ratio)
     self_consumption_y = production_monthly_sum_y["Produktion"] * self_consumption_ratio_index
     self_consumption_cumsum_y = self_consumption_y.cumsum()
