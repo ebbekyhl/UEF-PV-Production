@@ -700,7 +700,7 @@ handles, labels = ax[0].get_legend_handles_labels()
 fig0.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.91, 0.92), loc='upper left', borderaxespad=0.)
 
 # add copyright on bottom right of the figure
-fig0.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+fig0.text(0.42, 0.02, f'© {today.year} Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
 # savefig
 fig0.savefig("figures/production_panel_3.png", bbox_inches='tight')
 
@@ -837,7 +837,7 @@ ax_m.legend(handles[-3:], labels[-3:],
             prop = {'size': fs-2})
 
 # add copyright on bottom right of the figure
-fig.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+fig.text(0.42, 0.02, f'© {today.year} Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
 fig.savefig("figures/production_panel_2.png", bbox_inches='tight')
 
 ########################################################################################
@@ -1032,7 +1032,7 @@ plot_daily_profile(ax_3,
                                     name = "Inverter 2"
                             )
 
-fig_hourly.text(0.42, -0.05, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+fig_hourly.text(0.42, -0.05, f'© {today.year} Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
 fig_hourly.savefig("figures/production_panel_1.png", bbox_inches='tight')
 
 #######################################################################################
@@ -1096,7 +1096,7 @@ fig.legend(bbox_to_anchor=(0.13, 0.65), loc='lower left', borderaxespad=0., prop
 mloc = plt.MultipleLocator(1)
 ax.xaxis.set_major_locator(mloc)
 
-fig.text(0.43, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+fig.text(0.43, 0.02, f'© {today.year} Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
 fig.savefig("figures/production_panel_4.png", bbox_inches='tight')
 
 ########################################################################################
@@ -1206,7 +1206,7 @@ ax_m.legend(handles[-3:],
             prop = {'size': fs-2})
 
 # add copyright on bottom right of the figure
-fig_short.text(0.42, 0.02, '© 2025 Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
+fig_short.text(0.42, 0.02, f'© {today.year} Universitetets Energifællesskab (UEF)', ha='right', va='bottom', fontsize=14, color='gray', alpha=0.7)
 fig_short.savefig("figures/production_panel_short.png", bbox_inches='tight')
 
 
