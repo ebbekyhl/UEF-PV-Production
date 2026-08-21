@@ -1053,12 +1053,12 @@ fig, ax = plt.subplots(figsize=(10*aspect_ratio,10))
 
 # energy yield
 df_pivot_q50.plot(ax=ax, color=solar_color, lw=2, label="Solpanel median effekt (kW)")
-ax.fill_between(df_pivot.index, df_pivot_q25, df_pivot_q75, color=solar_color, alpha=0.1, lw=0, label="Solpanel 25-75 percentil")
+ax.fill_between(df_pivot.index, df_pivot_q10, df_pivot_q90, color=solar_color, alpha=0.1, lw=0, label="Solpanel 10-90 percentil")
 
 # electricity prices
 ax_t = ax.twinx()
 df_el_prices_pivot_q50.plot(ax=ax_t, color=red_color, lw=2, label="Elpris median (DKK/kWh)")
-ax_t.fill_between(df_el_prices_pivot_q50.index, df_el_prices_pivot_q25, df_el_prices_pivot_q75, color=red_color, alpha=0.1, lw=0, label="Elpris 25-75 percentil")
+ax_t.fill_between(df_el_prices_pivot_q50.index, df_el_prices_pivot_q10, df_el_prices_pivot_q90, color=red_color, alpha=0.1, lw=0, label="Elpris 10-90 percentil")
 
 # Add most recent day's electricity price profile as a red dashed line
 if len(df_el_prices_pivot.columns) > 0:
