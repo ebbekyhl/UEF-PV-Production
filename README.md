@@ -16,9 +16,9 @@ The GitHub action workflow includes an email sent to recipients listed in the se
 
 Data is updated daily, while emails are sent either monthly or quarterly.
 
-![UEF PV installation production data](/figures/production_panel_1.png)
-
 ![UEF PV installation production data](/figures/production_panel_2.png)
+
+![UEF PV installation production data](/figures/production_panel_1.png)
 
 ![UEF PV installation production data](/figures/production_panel_3.png)
 
