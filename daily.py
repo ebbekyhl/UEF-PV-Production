@@ -1202,10 +1202,9 @@ handles, labels = ax_m.get_legend_handles_labels()
 hatch_handle = plt.Rectangle((0,0),1,1, facecolor="white", edgecolor="k", hatch="//", alpha=0.4)
 handles.append(hatch_handle)
 labels.append("Egetforbrug")
-ax_m.legend(handles[-3:], labels[-3:], 
-            bbox_to_anchor=(0.95, 0.98), 
-            loc='upper right', 
-            borderaxespad=0., 
+ax_m.legend(handles[-3:], 
+            labels[-3:], 
+            loc='best', 
             prop = {'size': fs-2})
 
 # add copyright on bottom right of the figure
