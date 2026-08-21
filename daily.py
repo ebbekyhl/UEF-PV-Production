@@ -758,14 +758,6 @@ for year in production_monthly_sum_cums.keys():
 
     production_monthly_cum_sum_y = production_monthly_sum_cums[year]
 
-    (production_monthly_cum_sum_y["Produktion"]/1e3).plot(marker="o", 
-                                                          ax=ax_n, 
-                                                          color=colors[year], 
-                                                          alpha=0.7, 
-                                                          lw = 2, 
-                                                          zorder = 10, 
-                                                          label = year)
-
     if year == list(production_monthly_sum_cums.keys())[0]:
         expected_values = production_monthly_sum.month.map(pvgis).iloc[0:12]
         expected_values.index = production_monthly_sum_y.index
@@ -777,6 +769,14 @@ for year in production_monthly_sum_cums.keys():
                                      label="Forventet", 
                                      zorder = 0,
                                      ax=ax_n)
+
+    (production_monthly_cum_sum_y["Produktion"]/1e3).plot(marker="o", 
+                                                          ax=ax_n, 
+                                                          color=colors[year], 
+                                                          alpha=0.7, 
+                                                          lw = 2, 
+                                                          zorder = 10, 
+                                                          label = year)
      
     self_consumption_ratio_index = production_monthly_sum_y.index.map(self_consumption_ratio)
     self_consumption_y = production_monthly_sum_y["Produktion"] * self_consumption_ratio_index
