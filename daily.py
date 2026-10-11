@@ -288,13 +288,17 @@ production_monthly_sum.reset_index(inplace=True)
 production_monthly_sum["month"] = production_monthly_sum["month"].map(month_mapping)
 
 ###### If needed, manually correct certain months here ######
-manual_data = {("2025", "Nov"): 1273,
-               ("2026", "Jan"): 541,
-               ("2026", "Feb"): 697,
-               ("2026", "Mar"): 5943,
-               ("2026", "Jul"): 11719,
-               ("2026", "Aug"): 10279,
-               ("2026", "Sep"): 6150}
+
+manual_data = {
+    ("2025", "Nov"): 1273,
+    ("2026", "Jan"): 541,
+    ("2026", "Feb"): 697,
+    ("2026", "Mar"): 5943,
+    ("2026", "Jul"): 11719,
+    ("2026", "Aug"): 10280,
+    ("2026", "Sep"): 6150
+}
+
 for ym, value in manual_data.items():
     production_monthly_sum.loc[(production_monthly_sum["year"] == int(ym[0])) & (production_monthly_sum["month"] == ym[1]), "Produktion"] = value
 
