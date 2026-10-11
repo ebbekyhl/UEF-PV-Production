@@ -92,6 +92,12 @@ self_consumption_ratio = pd.Series({
                                     ("Jan", 2026): 1,
                                     ("Feb", 2026): 1,
                                     ("Mar", 2026): 0.94,
+                                    ("Apr", 2026): 0.89,
+                                    ("Maj", 2026): 0.88,
+                                    ("Jun", 2026): 0.89,
+                                    ("Jul", 2026): 0.88,
+                                    ("Aug", 2026): 0.90,
+                                    ("Sep", 2026): 0.92
                                     } # based on reporting by Zhe
                                     )
 
@@ -286,6 +292,7 @@ manual_data = {("2025", "Nov"): 1273,
                ("2026", "Jan"): 541,
                ("2026", "Feb"): 697,
                ("2026", "Mar"): 5943}
+               ("2026", "Sep"): 6150}
 for ym, value in manual_data.items():
     production_monthly_sum.loc[(production_monthly_sum["year"] == int(ym[0])) & (production_monthly_sum["month"] == ym[1]), "Produktion"] = value
 
